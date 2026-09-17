@@ -5,8 +5,8 @@
 # Not pushed to the AUR, this ships as a release asset for testing.
 pkgname=kyber-linuxport-bin
 _pkgname=KyberLinuxPort
-_appver=0.1.0-beta.6.4.13
-pkgver=0.1.0_beta.6.4.13
+_appver=0.1.0-beta.6.4.14
+pkgver=0.1.0_beta.6.4.14
 pkgrel=1
 pkgdesc="Unofficial Linux build of the Kyber mod launcher for Star Wars: Battlefront II (2017). Not endorsed by the Kyber team."
 arch=('x86_64')
@@ -16,8 +16,9 @@ license=('GPL-3.0-only')
 # only the ones deliberately left unbundled: the crypto chain must come from
 # the host (a bundled nettle poisons the system gnutls), and the pixbuf/SVG and
 # notification paths load host modules. nettle3 is the old-SONAME compat
-# package, not the current 'nettle' one; the launcher needs libnettle.so.8.
-depends=('gtk3' 'librsvg' 'libnotify' 'nettle3')
+# package, not the current 'nettle' one; the launcher needs libnettle.so.8,
+# libhogweed.so.6 and libgnutls.so.30.
+depends=('gtk3' 'librsvg' 'libnotify' 'nettle3' 'gnutls')
 optdepends=('zenity: startup hint dialogs (alternative to kdialog)'
             'kdialog: startup hint dialogs (alternative to zenity)'
             'gst-plugins-bad: needed for the Origin login splash video in BF2'
@@ -29,7 +30,7 @@ provides=('kyber-launcher')
 conflicts=('kyber-launcher-unofficial-appimage' 'kyber-launcher-inofficial-appimage')
 options=('!strip')
 source=("${_pkgname}-${_appver}-x86_64.tar.gz::${url}/releases/download/v${_appver}/${_pkgname}-x86_64.tar.gz")
-sha256sums=('3f5f0a56b8a18ff7cf046c9e181df2278f57276c1330f2a7b07b10d8615f8a62')
+sha256sums=('cf3d6330958a91fabeb4a540093ddc1c879071822b7e028e82478c5c02983867')
 
 package() {
     # The tarball already carries the full application tree, so unlike the

@@ -5,6 +5,50 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [0.1.0-beta.6.4.14] - 2026-09-17 - Joins and Mod Updates
+
+### Fixed
+
+- Joining a server from the launcher while Battlefront II is already running
+  no longer ends in "KYBER failed to authenticate your connection". The game
+  reads the join token once at startup and ignores one sent later, and the
+  server accepts each token only once. The launcher now asks you to restart
+  the game and leaves the token the game holds alone.
+
+- A slow first launch keeps a valid join token. Tokens expire 15 minutes after
+  Join, and the module update, a Proton download and the cold start all count
+  against that. A token older than 8 minutes is replaced right before the game
+  reads it. If the replacement fails, the launch stops and the game is closed,
+  since the server may already have dropped the old token.
+
+- The mod update check finds mods downloaded in the current Nexus folder
+  format. Those were skipped, so the check kept reporting no updates.
+
+- Presence replies carry your own EA account id instead of a fixed one that
+  upstream Maxima has had since its first commit. Nothing changes in game.
+
+- Battlefront II no longer inherits the launcher's frame cap. The AppImage sets
+  __GL_MaxFramesAllowed=1 so its own window stays responsive, and the NVIDIA
+  driver applied that to the game as well, which cost frames in play. The
+  variable is dropped before the game starts.
+
+- The fallback launch offered by the recovery dialog works again. Since the Dart
+  update the command line helper shipped without the library that holds its
+  code, so it started a bare runtime and exited, at the exact moment the normal
+  launch path had already failed. It also carried 55 MB of unused symbols,
+  which every download paid for.
+
+### Changed
+
+- With Nexus Premium, updating a mod replaces the installed version instead of
+  adding a second copy next to it. The new files are moved in first, the old
+  folder is removed only after that worked.
+
+- Mods with an update are highlighted in the list, and the update button shows
+  how many there are.
+
+- The native Wayland toggle is no longer marked experimental.
+
 ## [0.1.0-beta.6.4.13] - 2026-08-15 - Launch Recovery
 
 ### Fixed

@@ -57,29 +57,14 @@ not to upstream Kyber.
 
 ## Latest release
 
-v0.1.0-beta.6.4.13 is the current build, and the in-app updater offers it.
+v0.1.0-beta.6.4.14 is the current build, and the in-app updater offers it.
 
-**Update if game launches stopped working on Debian or Ubuntu.** 6.4.12 gave
-the game its own hostname on every launch where the machine name resolves to
-something other than 127.0.0.1, which is what those installers write by
-default. The game then started, never connected back to the launcher and never
-exited, so "Starting Game..." stayed on screen until the launcher was killed.
-Only a hosted server ever needed that, so only hosting uses it now.
-
-Your Proton build is accepted again. 6.4.12 narrowed detection to
-GE-Proton10-34 alone, so anyone carrying GE-Proton11, proton-cachyos or Valve's
-own Proton was sent through a roughly 516 MB download for a Proton that already
-worked. GE-Proton10-34 stays the build Kyber prefers and installs by default,
-but any working Proton is used now, including Valve's.
-
-Mods kept outside your home directory work. The game runs inside the Steam
-runtime container, which only shows it a fixed set of locations, so a mod
-folder on a second drive was not there at all once the game started, and
-Battlefront II quietly loaded none of them. Mod downloads started in the
-browser reach the launcher again as well.
-
-A launch that never reports back now gives up after five minutes and says so,
-instead of leaving the dialog spinning with nothing in the log.
+- Joining a server while the game is already running asks for a game restart
+  instead of getting you kicked with "failed to authenticate".
+- Slow first launches no longer lose their join token.
+- The mod update check finds mods in the current Nexus download format and
+  highlights mods with an update. With Nexus Premium the update replaces the
+  old version.
 
 If you are still on 6.4.10 or older, update by hand once: the broken updater
 shipped in every build before 6.4.11, so those versions cannot fetch the fix
@@ -183,12 +168,12 @@ compatibility promise.
 
 | Distro | Status |
 | --- | --- |
-| ✅ Ubuntu 24.04+ | primary dev platform, every release is tested here |
-| ✅ Fedora, Nobara | community-tested, no open reports |
-| ⚠️ Arch, CachyOS | runs, but `nettle3` has to be installed first, see [Dependencies](#dependencies) |
-| ⚠️ Bazzite | starts without extra packages; one report of AMD instability during play |
-| ⚠️ Steam Deck, SteamOS 3.7+ | launcher runs; the first game start can stall while umu fetches its runtime |
-| ❌ SteamOS 3.6, Ubuntu 22.04, Debian 12 | glibc too old, the launcher refuses to start |
+| Ubuntu 24.04+ | Runs. Every release is tested here |
+| Fedora, Nobara | Runs. Community-tested, no open reports |
+| Arch, CachyOS | Runs once `nettle3` is installed, see [Dependencies](#dependencies) |
+| Bazzite | Runs without extra packages; one report of AMD instability during play |
+| Steam Deck, SteamOS 3.7+ | Launcher runs; the first game start can stall while umu fetches its runtime |
+| SteamOS 3.6, Ubuntu 22.04, Debian 12 | Does not run, glibc too old. The launcher says so instead of crashing |
 
 A few notes on the entries that changed:
 
@@ -287,11 +272,10 @@ wineserver and retry" action, but cleanly exited beats forced-kill.
 
 ### Native Wayland
 
-The launcher runs on X11 (XWayland) by default, which is the stable path. On a
-Wayland session you can switch to the native backend under Settings -> Mods /
-Proton / Wayland ("Native Wayland", experimental). It applies after a restart.
-The toggle only appears on a Wayland session; on X11 there is no Wayland display
-to use, so it is hidden.
+The launcher runs on X11 (XWayland) by default. On a Wayland session you can
+switch to the native backend under Settings -> Mods / Proton / Wayland
+("Native Wayland"). It applies after a restart. The toggle only appears on a
+Wayland session; on X11 there is no Wayland display to use, so it is hidden.
 
 If the native backend glitches or crashes, turn the toggle back off (or remove
 `~/.config/kyber-linuxport/backend`) and it falls back to X11. The manual
