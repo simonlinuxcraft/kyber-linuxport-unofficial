@@ -245,7 +245,13 @@ SYS_LOADERS=/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 GDK_QUERY_LOADERS=/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders
 APPDIR_LOADERS="$APPDIR/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
 
-if [ -f "$SYS_LOADERS/libpixbufloader-svg.so" ] && [ ! -f "$APPDIR_LOADERS/libpixbufloader-svg.so" ]; then
+if [ ! -f "$SYS_LOADERS/libpixbufloader-svg.so" ]; then
+  echo "ERROR: $SYS_LOADERS/libpixbufloader-svg.so not found." >&2
+  echo "Install librsvg2-common, or update the path after a gdk-pixbuf ABI bump." >&2
+  exit 1
+fi
+
+if [ ! -f "$APPDIR_LOADERS/libpixbufloader-svg.so" ]; then
   cp "$SYS_LOADERS/libpixbufloader-svg.so" "$APPDIR_LOADERS/"
   for lib in librsvg-2.so.2 libxml2.so.2 libpangocairo-1.0.so.0 libpango-1.0.so.0 libpangoft2-1.0.so.0; do
     src="/lib/x86_64-linux-gnu/$lib"
@@ -670,6 +676,20 @@ fi
 _mkvp="$APPDIR/usr/bin/lib/libmedia_kit_video_plugin.so"
 if [ -f "$_mkvp" ]; then
   patchelf --set-rpath '$ORIGIN:$ORIGIN/../../lib' "$_mkvp"
+fi
+
+echo "==> Checking symbol versions against the release floor"
+# Bundled system libs inherit the build host's glibc and libstdc++. A build on a
+# newer distro passes the AppRun gate (kyber-glibc-precheck.sh) and then fails
+# to load, so refuse to package it.
+_versions="$(find "$APPDIR" -type f \( -name '*.so*' -o -perm -u+x \) -print0 \
+  | xargs -0 objdump -T 2>/dev/null | grep -o -E 'GLIBC(XX)?_[0-9.]+' || true)"
+_max() { printf '%s\n' "$_versions" | grep "^$1_" | sed "s/^$1_//" | sort -V | tail -1; }
+_newer() { [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" != "$2" ]; }
+if _newer "$(_max GLIBC)" 2.39 || _newer "$(_max GLIBCXX)" 3.4.32; then
+  echo "ERROR: bundle needs GLIBC_$(_max GLIBC) / GLIBCXX_$(_max GLIBCXX)," \
+    "the release floor is 2.39 / 3.4.32. Build on Ubuntu 24.04." >&2
+  exit 1
 fi
 
 echo "==> Building AppImage"
