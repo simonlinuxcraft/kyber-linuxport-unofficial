@@ -13,6 +13,7 @@
 #
 # Output:
 #   tools/KyberLinuxPort-x86_64.AppImage
+#   tools/2.0.0_beta9_<version>.tar.xz (AUR source)
 
 set -euo pipefail
 
@@ -737,8 +738,16 @@ cat > "$TOOLS/latest.json" <<EOF
 EOF
 echo "    latest.json: version=$PORT_VERSION sha256=$OUTPUT_SHA"
 
+# AUR source. The package has no AppRun, so the menu entry and icons must ship here.
+echo "==> Writing AUR archive"
+AUR_TARXZ="$TOOLS/2.0.0_beta9_${PORT_VERSION#*beta.}.tar.xz"
+tar -C "$APPDIR" --owner=0 --group=0 --numeric-owner --exclude=.sentry-native \
+  --transform 's,^usr/bin,opt/kyber,' -I 'xz -9e -T0' -cf "$AUR_TARXZ" \
+  usr/bin usr/share/applications usr/share/icons usr/share/doc/kyber-linux
+
 echo
 echo "==> Done"
 echo "AppImage: $OUTPUT"
 ls -lh "$OUTPUT"
 echo "Manifest: $TOOLS/latest.json"
+echo "AUR:      $AUR_TARXZ"
