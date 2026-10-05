@@ -49,10 +49,11 @@ package() {
     install -Dm644 "${srcdir}/${_pkgname}/usr/share/icons/hicolor/scalable/apps/kyber-linux.svg" \
         "${pkgdir}/usr/share/icons/hicolor/scalable/apps/kyber-linux.svg"
 
-    # Wrapper. KYBER_NO_AUTO_INSTALL=1 no-ops the self-install hook, and an
-    # explicitly empty KYBER_UPDATE_URL switches the container self-updater off:
-    # AppRun tests with ${VAR+x}, so an empty value counts as set and wins.
-    # pacman owns this copy and is the only thing that may replace it.
+    # Wrapper. KYBER_NO_AUTO_INSTALL=1 no-ops the self-install hook and the
+    # launcher's own nxm/kl registration, so the packaged handlers below stay the
+    # defaults. An explicitly empty KYBER_UPDATE_URL switches the container
+    # self-updater off: AppRun tests with ${VAR+x}, so an empty value counts as
+    # set and wins. pacman owns this copy and is the only thing that may replace it.
     install -dm755 "${pkgdir}/usr/bin"
     cat > "${pkgdir}/usr/bin/kyber-linuxport" <<EOF
 #!/bin/sh
@@ -95,16 +96,16 @@ StartupNotify=false
 MimeType=x-scheme-handler/qrc;
 EOF
 
-    # nxm:// Nexus Mods download handler.
+    # nxm:// (Nexus Mods) and kl:// (Kyber website, Discord linking) handler.
     cat > "${pkgdir}/usr/share/applications/kyber-linuxport-nxm.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Kyber NXM Handler
-Comment=Receives nxm:// links from Nexus Mods and forwards them to the Kyber launcher.
+Comment=Receives nxm:// and kl:// links and forwards them to the Kyber launcher.
 Exec=/opt/${pkgname}/usr/bin/cli/bin/nxm_handler.sh %u
 NoDisplay=true
 Terminal=false
 StartupNotify=false
-MimeType=x-scheme-handler/nxm;
+MimeType=x-scheme-handler/nxm;x-scheme-handler/kl;
 EOF
 }

@@ -107,13 +107,15 @@ distrobox enter kyber -- bash -lc \
   in its own desktop entry.
 - `BROWSER=/usr/bin/firefox` - use the in-container Firefox for OAuth.
 
-## 6. Route the qrc:// and nxm:// handlers **into** the container
+## 6. Route the qrc://, nxm:// and kl:// handlers **into** the container
 
-Kyber's self-install registers host-side `.desktop` handlers for its OAuth
-callback (`qrc://`) and Nexus mod links (`nxm://`). On an old-glibc host those run
-**on the host** (glibc gate) or in the wrong namespace and never reach the running
-in-container launcher - so EA login "never returns" and mod downloads don't fire.
-Re-point both into the container:
+Kyber's self-install and the launcher itself register host-side `.desktop`
+handlers for its OAuth callback (`qrc://`), Nexus mod links (`nxm://`) and Kyber
+links (`kl://`, Discord linking and website links). On an old-glibc host those
+run **on the host** (glibc gate) or in the wrong namespace and never reach the
+running in-container launcher - so EA login "never returns" and mod downloads
+don't fire. With `KYBER_NO_AUTO_INSTALL=1` the launcher leaves these handlers
+alone. Re-point them into the container:
 
 ```ini
 # ~/.local/share/applications/kyber-linuxport-qrc.desktop
@@ -123,11 +125,11 @@ MimeType=x-scheme-handler/qrc;
 ```ini
 # ~/.local/share/applications/kyber-linuxport-nxm.desktop
 Exec=~/.local/bin/distrobox enter kyber -- ~/Applications/KyberLinuxPort.extracted/usr/bin/cli/bin/nxm_handler.sh %u
-MimeType=x-scheme-handler/nxm;
+MimeType=x-scheme-handler/nxm;x-scheme-handler/kl;
 ```
 ```bash
 xdg-mime default kyber-linuxport-qrc.desktop x-scheme-handler/qrc
-xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm
+xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm x-scheme-handler/kl
 update-desktop-database ~/.local/share/applications
 ```
 

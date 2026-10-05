@@ -138,12 +138,13 @@ EOF
 chmod +x "$LOCALBIN/kyber-box"
 
 # ---------------------------------------------------------------------------
-# 6. URL-scheme handlers (qrc:// EA-login callback, nxm:// Nexus mods) MUST route
+# 6. URL-scheme handlers (qrc:// EA-login callback, nxm:// Nexus mods, kl:// Kyber
+#    website and Discord linking) MUST route
 #    back into the container. Kyber's self-install registers them to host paths,
 #    which run on the host (glibc gate) or in the wrong namespace and never reach
 #    the running launcher. Re-point them into the container.
 # ---------------------------------------------------------------------------
-log "Registering container-routing qrc:// and nxm:// handlers"
+log "Registering container-routing qrc://, nxm:// and kl:// handlers"
 mkdir -p "$DESKTOPDIR"
 EXT="$APPDIR/KyberLinuxPort.extracted"   # created by the launcher's self-install on first run
 cat > "$DESKTOPDIR/kyber-linuxport-qrc.desktop" <<EOF
@@ -160,14 +161,14 @@ cat > "$DESKTOPDIR/kyber-linuxport-nxm.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Kyber NXM Handler
-Comment=Routes nxm:// Nexus Mods links into the $CONTAINER container.
+Comment=Routes nxm:// and kl:// links into the $CONTAINER container.
 Exec=$LOCALBIN/distrobox enter $CONTAINER -- $EXT/usr/bin/cli/bin/nxm_handler.sh %u
 NoDisplay=true
 Terminal=false
-MimeType=x-scheme-handler/nxm;
+MimeType=x-scheme-handler/nxm;x-scheme-handler/kl;
 EOF
 xdg-mime default kyber-linuxport-qrc.desktop x-scheme-handler/qrc 2>/dev/null || true
-xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm 2>/dev/null || true
+xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm x-scheme-handler/kl 2>/dev/null || true
 update-desktop-database "$DESKTOPDIR" 2>/dev/null || true
 
 log "Done."

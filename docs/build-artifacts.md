@@ -78,7 +78,7 @@ directory, running `./AppRun` without any environment, and confirming that
 `packaging/linuxport-bin/PKGBUILD` pulls the tarball from the release, not the
 AppImage, so the package has no FUSE dependency. It installs to
 `/opt/kyber-linuxport-bin`, adds a `/usr/bin/kyber-linuxport` wrapper, the menu
-entry, all ten icon sizes and the qrc and nxm scheme handlers.
+entry, all ten icon sizes and the qrc and nxm/kl scheme handlers.
 
 Per release, three fields need updating:
 
@@ -92,7 +92,9 @@ mismatch.
 The wrapper sets `KYBER_NO_AUTO_INSTALL=1` and an explicitly empty
 `KYBER_UPDATE_URL`. AppRun tests that one with `${VAR+x}`, so an empty value
 still counts as set and keeps the self-updater off. pacman owns that copy and is
-the only thing allowed to replace it.
+the only thing allowed to replace it. `KYBER_NO_AUTO_INSTALL=1` also stops the
+launcher from registering its own nxm/kl handler on every start, so the packaged
+`kyber-linuxport-nxm.desktop` stays the default.
 
 This is separate from `packaging/aur/PKGBUILD`, which mirrors the AUR package
 `kyber-launcher-unofficial-appimage`. Despite its name that one now builds
