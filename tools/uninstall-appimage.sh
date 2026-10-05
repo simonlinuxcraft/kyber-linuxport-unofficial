@@ -24,7 +24,13 @@ rm -f \
   "$DESKTOP_DIR/kyber-linuxport-nxm.desktop" \
   "$DESKTOP_DIR/kyber-bf2-linuxport.desktop" \
   "$DESKTOP_DIR/kyber-bf2-linuxport-qrc.desktop" \
-  "$DESKTOP_DIR/kyber-bf2-linuxport-nxm.desktop"
+  "$DESKTOP_DIR/kyber-bf2-linuxport-nxm.desktop" \
+  "$DESKTOP_DIR/kyber-bf2-nxm.desktop"
+
+# The launcher writes its own nxm/kl handler on every start.
+echo "==> Removing the launcher's nxm/kl handler script"
+rm -f "$HOME/.local/share/kyber/bin/nxm_handler.sh"
+rmdir "$HOME/.local/share/kyber/bin" 2>/dev/null || true
 
 echo "==> Removing icons (all sizes, current and legacy names)"
 for size in 16 24 32 48 64 96 128 192 256 512; do
