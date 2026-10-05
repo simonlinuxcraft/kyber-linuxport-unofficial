@@ -57,14 +57,14 @@ not to upstream Kyber.
 
 ## Latest release
 
-v0.1.0-beta.6.4.14 is the current build, and the in-app updater offers it.
+v0.1.0-beta.6.4.15 is the current build, and the in-app updater offers it.
 
-- Joining a server while the game is already running asks for a game restart
-  instead of getting you kicked with "failed to authenticate".
-- Slow first launches no longer lose their join token.
-- The mod update check finds mods in the current Nexus download format and
-  highlights mods with an update. With Nexus Premium the update replaces the
-  old version.
+- Mod Manager downloads from Nexus start right away while the launcher is
+  running, no restart needed.
+- kl:// links work, so linking Discord and links from the Kyber website return
+  to the launcher. Distro packages keep their own link handlers.
+- The EA sign-in waits up to 15 minutes for a slow 2FA mail, and the field for
+  pasting the sign-in link shows up as soon as you click Login with EA.
 
 If you are still on 6.4.10 or older, update by hand once: the broken updater
 shipped in every build before 6.4.11, so those versions cannot fetch the fix

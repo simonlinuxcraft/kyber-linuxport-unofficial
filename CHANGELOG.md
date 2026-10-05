@@ -5,6 +5,52 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [0.1.0-beta.6.4.15] - 2026-10-05 - NXM and Login
+
+### Fixed
+
+- Mod Manager downloads from Nexus start while the launcher is running. The
+  link handler hands the link over by renaming a temp file onto the response
+  file, and the launcher's watcher only looked for create and modify events on
+  that file, so it missed the rename. The link waited until the next launcher
+  start.
+
+- kl:// links open the launcher on Linux. The plugin that registers them has no
+  Linux part, so the redirect after linking Discord and links from the Kyber
+  website ended in "no application" in the browser. The account link itself was
+  already stored by the server; only the return to the launcher was missing.
+  The launcher's own link handler now covers kl:// next to nxm://.
+
+- Distro packages keep their own nxm:// and kl:// handlers. The launcher wrote
+  its handler on every start and made it the default again. It now leaves the
+  handlers alone when KYBER_NO_AUTO_INSTALL is set, which the linuxport-bin
+  package and the distrobox setup do. AppImage, tarball and the AUR package
+  are unchanged. MAXIMA_PACKAGED cannot be used for this, the AppImage sets it
+  for its own qrc:// handler.
+
+- The EA sign-in waits 15 minutes for the browser to return instead of 5,
+  enough for a 2FA mail that arrives late. If it still runs out, the message
+  now says to click Try again and, if the browser does not come back, to paste
+  the qrc:// link into the field on the login screen.
+
+- uninstall-appimage.sh also removes the handler the launcher writes for
+  nxm:// and kl://, so those links no longer point at a launcher that is gone.
+
+### Changed
+
+- The field "Browser didn't return to the launcher?" opens right away and
+  expanded once you click Login with EA or Try again. It used to appear
+  collapsed after six seconds. The silent token check at startup still waits,
+  so the field does not flash on every start.
+
+- The handlers installed by linuxport-bin and the distrobox setup cover kl://
+  as well as nxm://.
+
+- The Kyber fork is merged with upstream ver/beta10 (September 2026). Nothing
+  changes for the Linux launcher: the upstream launcher fixes it contains
+  already shipped with 6.4.5, the rest is server, game module and Windows
+  build code.
+
 ## [0.1.0-beta.6.4.14] - 2026-09-17 - Joins and Mod Updates
 
 ### Fixed

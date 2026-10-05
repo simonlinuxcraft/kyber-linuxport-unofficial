@@ -5,8 +5,8 @@
 # Not pushed to the AUR, this ships as a release asset for testing.
 pkgname=kyber-linuxport-bin
 _pkgname=KyberLinuxPort
-_appver=0.1.0-beta.6.4.14
-pkgver=0.1.0_beta.6.4.14
+_appver=0.1.0-beta.6.4.15
+pkgver=0.1.0_beta.6.4.15
 pkgrel=1
 pkgdesc="Unofficial Linux build of the Kyber mod launcher for Star Wars: Battlefront II (2017). Not endorsed by the Kyber team."
 arch=('x86_64')
