@@ -81,6 +81,9 @@ Older releases are listed in [`CHANGELOG.md`](CHANGELOG.md).
 > do not work at all (a VM without GPU passthrough will not run BF2, for
 > example).
 
+Mods packed as RAR or 7z cannot be installed on Linux yet, only ZIP archives
+work ([#24](https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/issues/24)).
+
 It assumes a healthy system underneath. A working Steam-Proton or
 Lutris install of BF2, a real GPU with proper Vulkan drivers, and a
 normal desktop audio stack. The launcher cannot fix a broken Proton
