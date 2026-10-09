@@ -162,18 +162,19 @@ _kyber_self_install_run() {
     rm -f \
         "$desktop_dir/kyber.desktop" \
         "$desktop_dir/kyber-bf2.desktop" \
-        "$desktop_dir/kyber-bf2-nxm.desktop" \
+        "$desktop_dir/kyber-linuxport-nxm.desktop" \
         "$desktop_dir/kyber-bf2-linuxport.desktop" \
         "$desktop_dir/kyber-bf2-linuxport-qrc.desktop" \
         "$desktop_dir/kyber-bf2-linuxport-nxm.desktop" \
         "$desktop_dir/kyber-nxm-handler.desktop" \
         "$desktop_dir/maxima-qrc.desktop"
 
-    # 5. Write the three .desktop entries - main + qrc + nxm handlers.
+    # 5. Write the main and qrc .desktop entries. The launcher writes its own
+    # nxm/kl handler on every start, a second one here showed up twice in the
+    # browser's "Open with" dialog.
     # Absolute icon path avoids Papirus/custom-theme fallthrough to a
     # generic placeholder when the bare icon name isn't carried by the theme.
     local icon_abs="$HOME/.local/share/icons/hicolor/256x256/apps/kyber-linux.png"
-    local nxm_bin="$extract_dir/usr/bin/cli/bin/nxm_handler.sh"
     local qrc_bin="$extract_dir/usr/bin/cli/maxima-bootstrap"
 
     cat > "$desktop_dir/kyber-linuxport.desktop" <<EOF
@@ -203,18 +204,6 @@ StartupNotify=false
 MimeType=x-scheme-handler/qrc;
 EOF
 
-    cat > "$desktop_dir/kyber-linuxport-nxm.desktop" <<EOF
-[Desktop Entry]
-Type=Application
-Name=Kyber NXM Handler
-Comment=Receives nxm:// links from Nexus Mods and forwards them to the Kyber launcher.
-Exec=$nxm_bin %u
-NoDisplay=true
-Terminal=false
-StartupNotify=false
-MimeType=x-scheme-handler/nxm;
-EOF
-
     # 6. Refresh caches and register MIME handlers.
     update-desktop-database "$desktop_dir" 2>/dev/null || true
     gtk-update-icon-cache -t -f "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
@@ -222,7 +211,6 @@ EOF
     (kbuildsycoca6 --noincremental || kbuildsycoca5 --noincremental) </dev/null >/dev/null 2>&1 &
     disown 2>/dev/null || true
     xdg-mime default kyber-linuxport-qrc.desktop x-scheme-handler/qrc 2>/dev/null || true
-    xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm 2>/dev/null || true
 
     # 7. Persist marker, drop any stale "declined" marker.
     echo "$current_id" > "$marker"

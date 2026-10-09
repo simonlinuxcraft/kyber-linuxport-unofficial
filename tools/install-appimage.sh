@@ -9,12 +9,12 @@
 #     and old .deb installs.
 #   - Copies tools/KyberLinuxPort-x86_64.AppImage to ~/Applications/.
 #   - Extracts a static copy of the AppImage to ~/Applications/KyberLinuxPort.extracted/
-#     so qrc:// and nxm:// URL handlers can point at stable file paths
+#     so the qrc:// handler can point at a stable file path
 #     (FUSE mountpoints are random per run and not suitable for handlers).
-#   - Writes three .desktop files into ~/.local/share/applications/:
+#   - Writes two .desktop files into ~/.local/share/applications/:
 #       * kyber-linuxport.desktop      - main launcher
 #       * kyber-linuxport-qrc.desktop  - qrc:// handler (EA login redirect)
-#       * kyber-linuxport-nxm.desktop  - nxm:// handler (Nexus Mods downloads)
+#     The launcher writes its own nxm:// and kl:// handler on every start.
 #   - Installs the icon, refreshes desktop database + icon cache.
 #   - Wine prefix at ~/.local/share/maxima/wine/ is left untouched.
 #
@@ -45,7 +45,7 @@ echo "==> Removing leftover desktop entries from previous installs"
 rm -f \
   "$DESKTOP_DIR/kyber.desktop" \
   "$DESKTOP_DIR/kyber-bf2.desktop" \
-  "$DESKTOP_DIR/kyber-bf2-nxm.desktop" \
+  "$DESKTOP_DIR/kyber-linuxport-nxm.desktop" \
   "$DESKTOP_DIR/kyber-bf2-linuxport.desktop" \
   "$DESKTOP_DIR/kyber-bf2-linuxport-qrc.desktop" \
   "$DESKTOP_DIR/kyber-bf2-linuxport-nxm.desktop" \
@@ -138,30 +138,16 @@ StartupNotify=false
 MimeType=x-scheme-handler/qrc;
 EOF
 
-echo "==> Writing nxm:// handler .desktop (Nexus Mod-Manager downloads)"
-cat > "$DESKTOP_DIR/kyber-linuxport-nxm.desktop" <<EOF
-[Desktop Entry]
-Type=Application
-Name=Kyber NXM Handler
-Comment=Receives nxm:// links from Nexus Mods and forwards them to the Kyber launcher.
-Exec=$NXM_BIN %u
-NoDisplay=true
-Terminal=false
-StartupNotify=false
-MimeType=x-scheme-handler/nxm;
-EOF
-
 echo "==> Refreshing desktop and icon caches"
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 gtk-update-icon-cache -t -f "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 xdg-mime default kyber-linuxport-qrc.desktop x-scheme-handler/qrc 2>/dev/null || true
-xdg-mime default kyber-linuxport-nxm.desktop x-scheme-handler/nxm 2>/dev/null || true
 
 echo
 echo "==> Done"
 echo
 echo "Launcher:    $APPIMAGE_DST"
-echo "Extracted:   $EXTRACT_DIR (used by qrc/nxm handlers; do not delete)"
+echo "Extracted:   $EXTRACT_DIR (used by the qrc handler; do not delete)"
 echo "Menu entry:  $DESKTOP_DIR/kyber-linuxport.desktop"
 echo
 echo "If you also want to drop the old .deb residue (legacy package 'rc' state),"
