@@ -57,14 +57,16 @@ not to upstream Kyber.
 
 ## Latest release
 
-v0.1.0-beta.6.4.15 is the current build, and the in-app updater offers it.
+v7.0.0-beta10 is the current build, and the in-app updater offers it.
 
-- Mod Manager downloads from Nexus start right away while the launcher is
-  running, no restart needed.
-- kl:// links work, so linking Discord and links from the Kyber website return
-  to the launcher. Distro packages keep their own link handlers.
-- The EA sign-in waits up to 15 minutes for a slow 2FA mail, and the field for
-  pasting the sign-in link shows up as soon as you click Login with EA.
+- Based on Kyber beta10 with the new Party System: parties and server queues.
+- New version numbers. The major version follows the Kyber beta, 7 is beta10.
+- RAR and 7z mods install, not only ZIP.
+- The Sync button in the Mods tab finds Nexus updates for mods the launcher
+  downloaded.
+- With a free Nexus account the browser opens the "Slow download" page
+  directly, one click there sends the download to the launcher.
+- The browser lists the Kyber NXM Handler once, with the Kyber icon.
 
 If you are still on 6.4.10 or older, update by hand once: the broken updater
 shipped in every build before 6.4.11, so those versions cannot fetch the fix
@@ -81,9 +83,6 @@ Older releases are listed in [`CHANGELOG.md`](CHANGELOG.md).
 > do not work at all (a VM without GPU passthrough will not run BF2, for
 > example).
 
-Mods packed as RAR or 7z cannot be installed on Linux yet, only ZIP archives
-work ([#24](https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/issues/24)).
-
 It assumes a healthy system underneath. A working Steam-Proton or
 Lutris install of BF2, a real GPU with proper Vulkan drivers, and a
 normal desktop audio stack. The launcher cannot fix a broken Proton
@@ -99,13 +98,13 @@ fresh install misbehaves, so pull them in up front.
 Debian, Ubuntu, Mint:
 
 ```bash
-sudo apt install libgtk-3-0 libfuse2 librsvg2-2 libnotify4 gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav zenity gamemode
+sudo apt install libgtk-3-0 libfuse2 librsvg2-2 libnotify4 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav zenity gamemode
 ```
 
 Arch, CachyOS:
 
 ```bash
-sudo pacman -S --needed gtk3 fuse2 librsvg libnotify gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode nettle3
+sudo pacman -S --needed gtk3 fuse2 librsvg libnotify gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode nettle3
 ```
 
 Fedora: the equivalent gtk3, fuse, librsvg2, libnotify and gstreamer1
@@ -114,6 +113,7 @@ plugin packages.
 | Package | What it does | Needed |
 | --- | --- | --- |
 | gtk3, librsvg, libnotify, fuse2 | The launcher window itself | Required, will not start without them |
+| gstreamer plugins (base) | Launcher sounds, party invites and credits | Optional, silent without them |
 | gstreamer plugins (bad, ugly, libav) | Plays the EA login splash video | Optional, silent without them |
 | zenity | First-start dialog that offers the desktop entry | Recommended, preinstalled on most distros |
 | gamemode | Keeps the CPU governor on performance | Optional, smoother frames |
@@ -160,7 +160,7 @@ yay -S kyber-launcher-unofficial-appimage   # or: paru -S kyber-launcher-unoffic
 The AUR package is a native binary build (contributed by Yilmaz4), not the
 AppImage, and pulls in its own dependencies. The manual pacman step above is
 only needed if you run the downloaded AppImage directly. The package keeps the
-`-appimage` name for now and will be renamed to `kyber-launcher-bin` at beta 10.
+`-appimage` name for now.
 It is built separately from the AppImage release and can trail it by a version,
 so check `pkgver` if you need the newest build.
 

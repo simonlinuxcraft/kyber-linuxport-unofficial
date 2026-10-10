@@ -5,6 +5,97 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.0-beta10] - 2026-10-10 - Party System
+
+### Added
+
+- Kyber beta10 with parties and server queues. A party follows its leader
+  onto a server, and a full server can put you in a queue. See the upstream
+  change in
+  [ArmchairDevelopers/Kyber#81](https://github.com/ArmchairDevelopers/Kyber/pull/81).
+
+- Mod collections such as Battlefront Plus update incrementally: when a new
+  version comes out, only the mods that changed are downloaded. This comes
+  with Kyber beta10, and Kyber can switch it off on its side, then
+  collections download in full.
+
+- Mods packed as RAR (including RAR5) or 7z install on Linux. Until now only
+  ZIP worked, RAR and 7z went through Windows-only tools and the download
+  ended without a message. They are unpacked with libarchive, which the
+  AppImage already carries for its video playback; the AUR package uses the
+  one from the system. An archive that tries to write outside the mods folder
+  is refused.
+  ([#24](https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/issues/24))
+
+### Fixed
+
+- The Sync button in the Mods tab finds updates for mods the launcher
+  downloaded from Nexus. Downloads were unpacked loose into the mods folder,
+  and the check only reads Nexus ids from folder names, so it never found an
+  update for them. Nexus downloads now land in `nexus-<modId>-<fileId>`
+  folders, and an update replaces the old files instead of leaving both
+  versions installed. With a free account the folder follows the file you
+  picked in the browser. Mods installed before this release have to be
+  removed and downloaded again before the check sees them.
+
+- Opening the credits closed the launcher on systems without
+  gst-plugins-base. The audio library ends the whole process when GStreamer
+  cannot play sound. The launcher now checks for GStreamer's playbin first and
+  stays silent without it. The new party invite sound is covered the same
+  way.
+
+- Nexus downloads whose link carries no file name get the name from the
+  download server. Nexus hands out such links for some files, and the file
+  was saved without an extension and never unpacked. This comes from upstream
+  ([ArmchairDevelopers/Kyber#83](https://github.com/ArmchairDevelopers/Kyber/pull/83))
+  and now also covers the Linux download path.
+
+- The browser's "Open with" dialog lists the Kyber NXM Handler once, with the
+  Kyber icon. The AppImage self-install wrote a second handler next to the one
+  the launcher writes, and both had a generic icon. The self-install and
+  install-appimage.sh no longer write their own and remove the old one. The
+  launcher removes it as well, which covers users who moved from the AppImage
+  to the AUR package.
+
+### Changed
+
+- With a free Nexus account the launcher opens the "Slow download" page of
+  the file in the browser. One click there hands the download to the
+  launcher. Before, it opened the file list, where you had to pick "Mod
+  manager download" first, and "Manual download" put the file into the
+  browser's downloads where the launcher never saw it. Nexus requires free
+  accounts to start each download on its website, so the browser step stays.
+
+- New version numbers. The major version now follows the Kyber beta, so 7 is
+  beta10 and the next Kyber beta will be 8. 7.0.0-beta10 counts as newer than
+  0.1.0-beta.6.4.15, so the in-app updater offers it as usual.
+
+- The AUR package follows the new numbers (pkgver 7.0.0_beta10, release asset
+  7.0.0_beta10.tar.xz) and keeps its name kyber-launcher-unofficial-appimage.
+  It now depends on gst-plugins-base and libarchive. The PKGBUILD on the
+  release page depends on gst-plugins-base as well.
+
+- Picking a server instance works the upstream way now. The info box pages
+  through the instances with arrows and Join uses the one shown. The clickable
+  instance rows from the Linux port are gone, and so is the instance selector
+  in the join dialog, which upstream removed.
+
+- The Kyber fork is merged with upstream ver/beta10 at 182ca6e (#81 to #86),
+  the state Kyber released as 2.0.0-beta10. Build changes that came with it:
+  the webview stub follows desktop_webview_window 0.3.0, which
+  flutter_web_auth_2 6 needs, and still links no webkit. The CLI resolves its
+  Dart packages on its own again, as upstream does.
+
+### Known issues
+
+- Joining a server while Battlefront II is already running still asks you to
+  restart the game. The game module ignores a join token sent after startup,
+  and beta10 does not change that. When your party moves to a server while
+  the game runs, the launcher asks you to close it and join again from the
+  party window. It does not stop the game itself.
+
+- Parties and queues have only been tested with one player on Linux so far.
+
 ## [0.1.0-beta.6.4.15] - 2026-10-05 - NXM and Login
 
 ### Fixed
