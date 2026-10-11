@@ -1,6 +1,25 @@
-<h1 align="center">
-  <img src="assets/kyber-banner.png" alt="Kyber Linux Port - Unofficial Linux Port" width="800">
-</h1>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/kyber-linux-port-logo-dark.svg">
+    <img src="assets/kyber-linux-port-logo-light.svg" alt="Kyber Linux Port - Unofficial" width="640">
+  </picture>
+</p>
+
+<p align="center">
+  <a href="https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/releases/latest"><img src="assets/banner-badge-appimage.svg" alt="AppImage" height="32"></a>
+  &nbsp;
+  <a href="https://aur.archlinux.org/packages/kyber-launcher-unofficial-appimage"><img src="assets/banner-badge-aur.svg" alt="AUR" height="32"></a>
+  &nbsp;
+  <a href="#steam-deck--steamos"><img src="assets/banner-badge-steam-deck.svg" alt="Steam Deck" height="32"></a>
+</p>
+
+<p align="center">
+  <img src="assets/banner-label-for.svg" alt="for" height="16"><br>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/banner-battlefront.svg">
+    <img src="assets/banner-battlefront-light.svg" alt="Star Wars Battlefront II" width="280">
+  </picture>
+</p>
 
 <p align="center">
   <a href="https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/releases/latest"><img src="https://img.shields.io/github/v/release/simonlinuxcraft/kyber-linuxport-unofficial?label=release&color=f8b133" alt="Latest release"></a>
