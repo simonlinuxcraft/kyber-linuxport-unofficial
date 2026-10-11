@@ -45,6 +45,14 @@ redistributed inside the produced AppImage:
 See [`THIRD_PARTY_TOOLS.md`](THIRD_PARTY_TOOLS.md) for the full
 attribution and download URLs.
 
+## Logo and trademarks
+
+The Linux port logo and launcher icon (`assets/kyber-linux-port-*.svg`)
+contain Tux, drawn by Larry Ewing (lewing@isc.tamu.edu) with The GIMP.
+
+Linux is the registered trademark of Linus Torvalds in the U.S. and other
+countries.
+
 ## Aggregation license
 
 The aggregate work conveyed via this repository (and any AppImage
