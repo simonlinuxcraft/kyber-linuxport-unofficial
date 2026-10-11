@@ -57,16 +57,18 @@ not to upstream Kyber.
 
 ## Latest release
 
-v7.0.0-beta10 is the current build, and the in-app updater offers it.
+v7.0.1-beta10 is the current build, and the in-app updater offers it.
 
-- Based on Kyber beta10 with the new Party System: parties and server queues.
-- New version numbers. The major version follows the Kyber beta, 7 is beta10.
+- Based on Kyber beta10 with the Party System: parties and server queues.
+- Joining no longer gets stuck until a restart when a Kyber proxy stops
+  answering.
+- The Sync button in the Mods tab finds Nexus updates for mods from the mod
+  browser, a server's "Download mods", a party, or an archive dropped onto the
+  launcher.
 - RAR and 7z mods install, not only ZIP.
-- The Sync button in the Mods tab finds Nexus updates for mods the launcher
-  downloaded.
 - With a free Nexus account the browser opens the "Slow download" page
   directly, one click there sends the download to the launcher.
-- The browser lists the Kyber NXM Handler once, with the Kyber icon.
+- The major version follows the Kyber beta, 7 is beta10.
 
 If you are still on 6.4.10 or older, update by hand once: the broken updater
 shipped in every build before 6.4.11, so those versions cannot fetch the fix

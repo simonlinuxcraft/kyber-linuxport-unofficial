@@ -5,6 +5,42 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.1-beta10] - 2026-10-11 - Join and Mod Fixes
+
+### Fixed
+
+- Joining could stop working until the launcher was restarted. When a Kyber
+  proxy accepted the ping connection but never answered, the proxy check
+  waited on it forever, and every join waits for that check. Such a proxy now
+  counts as failed like any other. The ping code is new in Kyber beta10
+  ([ArmchairDevelopers/Kyber#85](https://github.com/ArmchairDevelopers/Kyber/pull/85)).
+
+- A join no longer waits on the public IP lookup. The launcher asks
+  checkip.amazonaws.com for your address to recognise a server hosted on your
+  own machine. That request had no time limit, and if it failed the join was
+  cancelled. It now gives up after five seconds and joins by the server
+  address.
+
+- The Sync button in the Mods tab also finds updates for mods that came in
+  through "Download mods" on a server, through a party, or as an archive
+  dropped onto the launcher. Those carry no Nexus file id, so they were still
+  unpacked loose into the mods folder. They now go into a folder named after
+  the Nexus archive, which holds the mod id and upload time the check needs.
+  Mods installed that way before this release have to be installed once more.
+
+- A party leader hosting the party's server could be asked to close
+  Battlefront II. The Linux check for a running game came before the check
+  for the leader's own server.
+
+- Deleting a mod that was unpacked by hand removes its whole folder. Such
+  mods often sit one folder deeper, and only the inner folder was removed,
+  which left an empty one behind in the mods folder.
+
+### Changed
+
+- The launcher log notes when the server browser starts a join after the
+  missing mods finished downloading.
+
 ## [7.0.0-beta10] - 2026-10-10 - Party System
 
 ### Added
