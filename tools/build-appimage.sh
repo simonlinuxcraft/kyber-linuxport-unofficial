@@ -91,14 +91,13 @@ StartupWMClass=kyber-linux
 Keywords=BF2;Battlefront;Kyber;StarWars;
 EOF
 
-echo "==> Placing Kyber icon (rendered from SVG)"
-# Kyber bundles the proper logo as SVG. The macOS asset bundle has a
-# Flutter-default app_icon_*.png that does NOT show the Kyber logo, so we
-# render the Kyber SVG instead. Multiple raster sizes plus the SVG go
+echo "==> Placing Kyber Linux Port icon (rendered from SVG)"
+# The port has its own icon (Tux in the Kyber hexagon) so it is not mixed up
+# with the Windows launcher. Multiple raster sizes plus the SVG go
 # into the AppDir so desktop environments can pick the cleanest one.
-LOGO_SVG="$REPO_ROOT/Kyber/Launcher/assets/icons/kyber-logo.svg"
+LOGO_SVG="$REPO_ROOT/assets/kyber-linux-port-icon.svg"
 if [ ! -f "$LOGO_SVG" ]; then
-  echo "ERROR: Kyber logo SVG not found at $LOGO_SVG" >&2
+  echo "ERROR: Icon SVG not found at $LOGO_SVG" >&2
   exit 1
 fi
 if ! command -v rsvg-convert >/dev/null; then
@@ -111,9 +110,9 @@ if ! command -v convert >/dev/null; then
 fi
 for size in 16 24 32 48 64 96 128 192 256 512; do
   mkdir -p "$APPDIR/usr/share/icons/hicolor/${size}x${size}/apps"
-  # viewBox is 166x144 (wider than tall). --keep-aspect-ratio keeps the
-  # logo from being stretched, then ImageMagick pads the result with
-  # transparency back up to a square that linuxdeploy will accept.
+  # --keep-aspect-ratio keeps a non-square SVG from being stretched, then
+  # ImageMagick pads the result with transparency back up to a square that
+  # linuxdeploy will accept.
   rsvg-convert -w "$size" -h "$size" --keep-aspect-ratio "$LOGO_SVG" \
     | convert - -background none -gravity center -extent "${size}x${size}" \
         "$APPDIR/usr/share/icons/hicolor/${size}x${size}/apps/kyber-linux.png"
