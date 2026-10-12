@@ -5,6 +5,52 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.2-beta10] - 2026-10-12 - Stability and New Logo
+
+### Changed
+
+- The Linux port has its own icon: Tux in the Kyber hexagon. The menu entry,
+  the dock and the AppImage use it, so the port is no longer mixed up with
+  the Windows launcher. The icon in the menu changes on the first start of
+  this version.
+
+- The title bar reads KYBER, LINUX PORT and UNOFFICIAL instead of OPEN BETA,
+  with Tux in place of the K mark.
+
+- The launcher log notes when a server is full and the join goes into the
+  queue, and when a reserved queue spot starts the join. Before, a join
+  waiting in the queue looked the same in the log as one that never started.
+
+### Fixed
+
+These fixes come from Kyber's `fix/launcher-stability` branch by Liam and are
+taken over before they reach a Kyber release.
+
+- Switching the in-game view or the server moderation view to another server
+  while the previous one was still connecting could leave the old connection
+  running. It then kept writing into the new view or cleared it when it
+  closed. Each load now ignores everything from an older one. A second load
+  of the same server while the first is running is still skipped.
+
+- Party events sent while the session connection was closed raised an error.
+  They are now skipped.
+
+- Updating a mod collection reused an installed mod when its file name and
+  version matched. It now also checks that the file has the same size as in
+  the archive and, while updating, the same CRC32. A damaged or changed file
+  is downloaded again instead of kept. Large collections take a little longer
+  to compare.
+
+- Servers in a region the launcher has no icon or proxy for no longer cause
+  errors in the server list and the server details.
+
+- Pausing or resuming a download no longer fails on tasks that cannot be
+  paused.
+
+- Smaller errors when writing the log file, on the Stats page without an EA
+  login, when creating a collection from selected mods, and when reading the
+  screenshots of a collection, which left the file open.
+
 ## [7.0.1-beta10] - 2026-10-11 - Join and Mod Fixes
 
 ### Fixed

@@ -76,9 +76,12 @@ not to upstream Kyber.
 
 ## Latest release
 
-v7.0.1-beta10 is the current build, and the in-app updater offers it.
+v7.0.2-beta10 is the current build, and the in-app updater offers it.
 
 - Based on Kyber beta10 with the Party System: parties and server queues.
+- New icon and title bar: Tux in the Kyber hexagon, marked as unofficial.
+- Fixes from upstream Kyber for switching servers, parties, collection
+  updates, the server list and the download manager.
 - Joining no longer gets stuck until a restart when a Kyber proxy stops
   answering.
 - The Sync button in the Mods tab finds Nexus updates for mods from the mod
