@@ -76,9 +76,12 @@ not to upstream Kyber.
 
 ## Latest release
 
-v7.0.2-beta10 is the current build, and the in-app updater offers it.
+v7.0.3-beta10 is the current build, and the in-app updater offers it.
 
-- Based on Kyber beta10 with the Party System: parties and server queues.
+- Based on Kyber 2.0.0-beta10.1 with the Party System: parties and server
+  queues.
+- Joining another server while Battlefront II runs works again, without a
+  restart.
 - New icon and title bar: Tux in the Kyber hexagon, marked as unofficial.
 - Fixes from upstream Kyber for switching servers, parties, collection
   updates, the server list and the download manager.

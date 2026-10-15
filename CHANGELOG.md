@@ -5,6 +5,51 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.3-beta10] - 2026-10-15 - Server Switching and Beta10.1
+
+### Changed
+
+- Joining another server while Battlefront II runs works again, without a
+  restart. Kyber's game module used to keep the join token from the game
+  start and ignore a new one, so every later join ended in "KYBER failed to
+  authenticate". Since 0.1.0-beta.6.4.14 the launcher therefore asked for a
+  restart instead. Kyber fixed the module in beta10.1, and the launcher now
+  hands the join to the running game like the Windows launcher does. The
+  fixed module is downloaded on the next Play.
+
+- When your party moves to a server and your game runs with different mods,
+  the launcher still asks you to close Battlefront II and join again from the
+  party window. It does not stop the game itself.
+
+- The Kyber fork is updated to upstream 2.0.0-beta10.1 (#90). The upstream
+  client version in Settings reads 2.0.0-beta10.1.
+
+### Added
+
+- Two experimental toggles from upstream under Settings, Ingame Settings:
+  "Disable Force DX11" and "Disable Force No HDR". They are off by default
+  and untested on Linux.
+
+### Fixed
+
+- The Credits List page in Settings stayed on its loading spinner while
+  battlefront.plus is unreachable, which is the case right now. It now shows
+  the credits without the Battlefront Plus contributor list.
+
+These fixes come from Kyber 2.0.0-beta10.1:
+
+- Mod archives with an upper-case extension such as `.ZIP` are extracted.
+
+- The download manager keeps showing the extraction progress, and the
+  progress bar no longer runs past its end.
+
+- When the server list fails to load, its error message shows instead of an
+  empty area.
+
+Fixes in Kyber's game module from the same release, among them ModLoader
+fixes for asset hash collisions and shader priority and joining servers with
+a password, arrive with the module download and need no launcher update.
+
 ## [7.0.2-beta10] - 2026-10-12 - Stability and New Logo
 
 ### Changed
