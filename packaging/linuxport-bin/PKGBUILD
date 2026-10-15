@@ -31,7 +31,7 @@ provides=('kyber-launcher')
 conflicts=('kyber-launcher-unofficial-appimage' 'kyber-launcher-inofficial-appimage')
 options=('!strip')
 source=("${_pkgname}-${_appver}-x86_64.tar.gz::${url}/releases/download/v${_appver}/${_pkgname}-x86_64.tar.gz")
-sha256sums=('3a5996a177b6615bd0bdf6b5011c7eec3c6e83db93e342b36ea239a5cca1a241')
+sha256sums=('bc1e305ed05552eabade8e8b31ee0a73305571a093dfbbbd3378292cd667768f')
 
 package() {
     # The tarball already carries the full application tree, so unlike the
