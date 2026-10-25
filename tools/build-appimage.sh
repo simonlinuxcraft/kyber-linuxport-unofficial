@@ -668,6 +668,14 @@ if [ -f "$APPDIR/usr/bin/lib/libsentry.so" ]; then
   patchelf --set-rpath '$ORIGIN/../../lib' "$APPDIR/usr/bin/lib/libsentry.so"
 fi
 
+# crashpad_handler ships with a RUNPATH of empty entries, which the loader reads
+# as the working directory, so it would load a libcurl.so.4 lying there. Drop it
+# and let it use the system libcurl: the bundled one only knows Debian's CA path
+# and fails TLS on openSUSE.
+if [ -f "$APPDIR/usr/bin/lib/crashpad_handler" ]; then
+  patchelf --remove-rpath "$APPDIR/usr/bin/lib/crashpad_handler"
+fi
+
 # media_kit's video plugin NEEDs libmpv.so.2, which linuxdeploy bundled only
 # into usr/lib (it pulls in the whole ffmpeg/libass cluster). Flutter leaves a
 # build-machine-absolute RUNPATH on this plugin (.../flutter/ephemeral) which
