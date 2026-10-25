@@ -5,8 +5,8 @@
 # Not pushed to the AUR, this ships as a release asset for testing.
 pkgname=kyber-linuxport-bin
 _pkgname=KyberLinuxPort
-_appver=7.0.3-beta10
-pkgver=7.0.3_beta10
+_appver=7.0.4-beta10
+pkgver=7.0.4_beta10
 pkgrel=1
 pkgdesc="Unofficial Linux build of the Kyber mod launcher for Star Wars: Battlefront II (2017). Not endorsed by the Kyber team."
 arch=('x86_64')
@@ -15,11 +15,11 @@ license=('GPL-3.0-only')
 # The tarball bundles its own GTK stack and media libraries. Listed here are
 # only the ones deliberately left unbundled: the crypto chain must come from
 # the host (a bundled nettle poisons the system gnutls), and the pixbuf/SVG and
-# notification paths load host modules. nettle3 is the old-SONAME compat
-# package, not the current 'nettle' one; the launcher needs libnettle.so.8,
-# libhogweed.so.6 and libgnutls.so.30. GStreamer plugins come from the host as
-# well; without gst-plugins-base the launcher plays no sounds.
-depends=('gtk3' 'librsvg' 'libnotify' 'nettle3' 'gnutls' 'gst-plugins-base')
+# notification paths load host modules. On a nettle 4 system AppRun adds the
+# nettle 3 copy from usr/lib/nettle3, so only libgnutls.so.30 has to come from
+# here. GStreamer plugins come from the host as well; without gst-plugins-base
+# the launcher plays no sounds.
+depends=('gtk3' 'librsvg' 'libnotify' 'gnutls' 'gst-plugins-base')
 optdepends=('zenity: startup hint dialogs (alternative to kdialog)'
             'kdialog: startup hint dialogs (alternative to zenity)'
             'gst-plugins-bad: needed for the Origin login splash video in BF2'

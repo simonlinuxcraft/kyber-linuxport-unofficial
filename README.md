@@ -76,8 +76,15 @@ not to upstream Kyber.
 
 ## Latest release
 
-v7.0.3-beta10 is the current build, and the in-app updater offers it.
+v7.0.4-beta10 is the current build, and the in-app updater offers it.
 
+- Starts again on SteamOS 3.9 and openSUSE Tumbleweed, which ship nettle
+  4.0. 7.0.3 cannot start there to update itself, so download 7.0.4 by hand
+  once. Arch and CachyOS no longer need the `nettle3` package.
+- DOWNLOAD MODS no longer does nothing or stays greyed out when the server
+  or a mod lookup fails, it shows the error instead.
+- After a failed inject the launcher really stops Battlefront II and the
+  Wine processes around it.
 - Based on Kyber 2.0.0-beta10.1 with the Party System: parties and server
   queues.
 - Joining another server while Battlefront II runs works again, without a
@@ -131,7 +138,7 @@ sudo apt install libgtk-3-0 libfuse2 librsvg2-2 libnotify4 gstreamer1.0-plugins-
 Arch, CachyOS:
 
 ```bash
-sudo pacman -S --needed gtk3 fuse2 librsvg libnotify gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode nettle3
+sudo pacman -S --needed gtk3 fuse2 librsvg libnotify gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode
 ```
 
 Fedora: the equivalent gtk3, fuse, librsvg2, libnotify and gstreamer1
@@ -144,14 +151,12 @@ plugin packages.
 | gstreamer plugins (bad, ugly, libav) | Plays the EA login splash video | Optional, silent without them |
 | zenity | First-start dialog that offers the desktop entry | Recommended, preinstalled on most distros |
 | gamemode | Keeps the CPU governor on performance | Optional, smoother frames |
-| nettle3 | Provides libnettle.so.8 | Rolling Arch/CachyOS only, see below |
 
 webkit2gtk is no longer needed: the in-app webview is unused on Linux, so
 it was dropped to fix startup on systems without a system webkit such as
 the Steam Deck. libmpv is bundled inside the AppImage, you do not install
-it yourself. nettle3 matters because rolling Arch and CachyOS now ship
-nettle 4.0 (libnettle.so.9); without the libnettle.so.8 that nettle3
-provides the launcher will not start, and it shows a dialog telling you so.
+it yourself. nettle3 is no longer needed either: on systems that ship only
+nettle 4.0 (libnettle.so.9) the AppImage uses the nettle 3 it carries.
 
 ## Install
 
@@ -200,16 +205,19 @@ compatibility promise.
 | --- | --- |
 | Ubuntu 24.04+ | Runs. Every release is tested here |
 | Fedora, Nobara | Runs. Community-tested, no open reports |
-| Arch, CachyOS | Runs once `nettle3` is installed, see [Dependencies](#dependencies) |
+| Arch, CachyOS | Runs. Since 7.0.4 without the `nettle3` package |
+| openSUSE Tumbleweed | Starts in a container test with 7.0.4, no user reports yet |
 | Bazzite | Runs without extra packages; one report of AMD instability during play |
-| Steam Deck, SteamOS 3.7+ | Launcher runs; the first game start can stall while umu fetches its runtime |
+| Steam Deck, SteamOS 3.7+ | Launcher runs; the first game start can stall while umu fetches its runtime. SteamOS 3.9 needs 7.0.4 or newer |
 | SteamOS 3.6, Ubuntu 22.04, Debian 12 | Does not run, glibc too old. The launcher says so instead of crashing |
 
 A few notes on the entries that changed:
 
-- **Arch and CachyOS** are the only systems that need a manual step. Rolling
-  Arch ships `libnettle.so.9`, the build needs `libnettle.so.8`. Without
-  `nettle3` the launcher does not start, and it will tell you so.
+- **Arch, CachyOS, SteamOS 3.9 and openSUSE Tumbleweed** ship nettle 4.0
+  (`libnettle.so.9`), the build needs `libnettle.so.8`. Up to 7.0.3 the
+  launcher did not start there without the `nettle3` package, which SteamOS
+  cannot install. Since 7.0.4 the AppImage brings nettle 3 along and uses it
+  only on these systems.
 - **Bazzite** no longer needs a FUSE2 layer. The AppImage carries the type-2
   runtime, which speaks FUSE3, falls back to FUSE2 and extracts itself when
   neither is there. The remaining question mark is a report of GPU instability

@@ -5,6 +5,49 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.4-beta10] - 2026-10-25 - SteamOS 3.9 and Downloads
+
+### Fixed
+
+- The launcher starts again on SteamOS 3.9 and openSUSE Tumbleweed, and on
+  Fedora 45 once it is out. These systems moved to nettle 4.0, which only
+  ships `libnettle.so.9`, so 7.0.3 stopped right away with "libnettle.so.8:
+  cannot open shared object file". The AppImage now carries nettle 3 in a
+  folder of its own and uses it only when the system has nettle 4 and no
+  nettle 3. Systems with nettle 3 keep using their own copy. 7.0.3 cannot
+  start on these systems to update itself, so download 7.0.4 by hand once.
+
+- Arch and CachyOS no longer need the `nettle3` package for the AppImage,
+  the tar.gz or the release PKGBUILD, and the startup dialog that asked for
+  it is gone.
+
+- DOWNLOAD MODS sometimes did nothing at all. When the Kyber backend no
+  longer knew the selected server, the check before the download failed
+  without a message. It now says "Server not found! Refresh the server
+  list.".
+
+- When looking up a mod download failed, the DOWNLOAD MODS button stayed
+  greyed out until a restart, and a running download stayed paused. The
+  button comes back with an error message now, and a mod whose Nexus page
+  cannot be read no longer stops the other downloads.
+
+- After a failed Kyber inject, Battlefront II kept running in the background
+  although the dialog said it had been stopped. The launcher now stops the
+  game's whole Wine prefix, including the Wine helper processes that stayed
+  behind with ntsync and kept running until a reboot.
+
+- A mod update that could not be installed now shows its error. The message
+  used to get lost in the background download process.
+
+- The crash reporter's helper no longer looks for libraries in the folder
+  the launcher was started from.
+
+### Changed
+
+- The Kyber fork carries the upstream 2.0.0-beta10.2 module sources. The
+  game module itself still comes from Kyber's download, so nothing changes
+  in the launcher.
+
 ## [7.0.3-beta10] - 2026-10-15 - Server Switching and Beta10.1
 
 ### Changed
