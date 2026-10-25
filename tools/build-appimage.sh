@@ -154,21 +154,31 @@ rm -f "$APPDIR"/usr/lib/girepository-1.0/WebKit*.typelib \
 # linked against: libnettle.so.8 (libarchive, librtmp, libsrt-gnutls),
 # libhogweed.so.6 (librtmp) and libgnutls.so.30 (libavformat, libcups, libldap).
 # The glibc baseline says nothing about those, the nettle SONAME is versioned
-# independently of glibc. Debian, Ubuntu, Fedora and SteamOS ship nettle 3.x and
-# have them. Rolling Arch and CachyOS moved to nettle 4.0, which installs
-# libnettle.so.9 only, so those need the nettle3 compatibility package. That is
-# why README.md lists nettle3 and why tools/kyber-cachyos-hint.sh checks for
-# libnettle.so.8 at startup and offers the one-line fix.
+# independently of glibc. Debian, Ubuntu, Fedora and SteamOS up to 3.8 ship
+# nettle 3.x and have them.
 #
 # The whole chain hangs off libmpv (the first-start intro video); nothing else
 # bundled pulls libarchive or the ffmpeg cluster in.
 #
-# Do not "fix" this by bundling the libraries again. That brings the SteamOS
-# HOGWEED_6 abort back, and SteamOS has no compatibility package to install.
-# The trade is deliberate.
+# Do not "fix" this by bundling the libraries into usr/lib again. That brings
+# the SteamOS HOGWEED_6 abort back.
 rm -f "$APPDIR"/usr/lib/libgnutls.so.* \
       "$APPDIR"/usr/lib/libhogweed.so.* \
       "$APPDIR"/usr/lib/libnettle.so.* 2>/dev/null || true
+
+# Rolling Arch, CachyOS and SteamOS 3.9+ moved to nettle 4.0, which installs
+# libnettle.so.9/libhogweed.so.7 only, so the launcher dies there with
+# "libnettle.so.8: cannot open shared object file". Ship the build host's nettle
+# 3 (the version the consumers were linked against) outside the RUNPATH, in
+# usr/lib/nettle3. tools/kyber-cachyos-hint.sh puts it on LD_LIBRARY_PATH only
+# when the host has libnettle.so.9 and no libnettle.so.8. Then no system library
+# uses the .so.8/.so.6 SONAMEs, so nothing can bind against our copy.
+mkdir -p "$APPDIR/usr/lib/nettle3"
+for _nl in libnettle.so.8 libhogweed.so.6; do
+  _src="$(ldconfig -p 2>/dev/null | awk -v n="$_nl" '$1==n && !f{print $NF; f=1}')"
+  [ -n "$_src" ] && [ -f "$_src" ] && cp -L "$_src" "$APPDIR/usr/lib/nettle3/$_nl"
+  [ -f "$APPDIR/usr/lib/nettle3/$_nl" ] || { echo "ERROR: $_nl not found on the build host" >&2; exit 1; }
+done
 
 # Bundle libjack. media_kit's libmpv/libavdevice were built with JACK output
 # support, so they hard-NEED libjack.so.0, but JACK is not installed by default

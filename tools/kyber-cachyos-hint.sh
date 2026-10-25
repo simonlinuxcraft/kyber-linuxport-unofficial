@@ -11,6 +11,15 @@
 # Stays out of the way on Ubuntu/Debian/Fedora (returns early when
 # pacman is missing), and remembers what it already asked about via a
 # marker file in ~/.local/share/kyber-linuxport/.
+#
+# Also adds the bundled nettle 3 on nettle-4.0-only hosts (Arch, CachyOS,
+# SteamOS 3.9+), on any distro, see the nettle comment in build-appimage.sh.
+
+_kyber_ldc="$( { ldconfig -p || /sbin/ldconfig -p; } 2>/dev/null )"
+case "$_kyber_ldc" in *libnettle.so.8*) ;; *libnettle.so.9*)
+    export LD_LIBRARY_PATH="$this_dir/usr/lib/nettle3${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+esac
+unset _kyber_ldc
 
 _kyber_cachyos_hint_main() {
     [ -n "${KYBER_NO_CACHYOS_HINT:-}" ] && return 0
@@ -38,30 +47,6 @@ _kyber_cachyos_hint_main() {
     [ "$id" = "endeavouros" ] && is_arch=1
     case " $id_like " in *' arch '*) is_arch=1 ;; esac
     [ "$is_arch" = 0 ] && return 0
-
-    # nettle 4.0 (current Arch/CachyOS) bumped libnettle to .so.9, but the
-    # bundled ffmpeg/srt crypto consumers need libnettle.so.8, so the launcher
-    # cannot start here without the nettle3 compat package. Detect the missing
-    # .so.8 and point the user at the one-line fix. The check self-clears once
-    # nettle3 is installed, so no marker is needed. SteamOS (nettle 3.x, has
-    # .so.8) is already excluded above, so this never fires on the Deck. This is
-    # only a runtime hint; it does not touch the bundled crypto.
-    if ! ldconfig -p 2>/dev/null | grep -q 'libnettle\.so\.8'; then
-        if command -v zenity >/dev/null 2>&1 || command -v kdialog >/dev/null 2>&1; then
-            local ntitle="Kyber (Linux Port)"
-            local nbody
-            nbody="$(printf 'This system ships nettle 4.0 (libnettle.so.9), but the launcher needs libnettle.so.8 and will not start without it.\n\nInstall the compatibility package, then start the launcher again:\n\nsudo pacman -S nettle3')"
-            if command -v zenity >/dev/null 2>&1; then
-                LC_ALL=C.UTF-8 LANGUAGE=en zenity --warning --no-wrap --title="$ntitle" --text="$nbody" 2>/dev/null || true
-            else
-                LC_ALL=C.UTF-8 LANGUAGE=en kdialog --title "$ntitle" --sorry "$nbody" 2>/dev/null || true
-            fi
-        fi
-        # Without libnettle.so.8 the launcher cannot start, so the optional
-        # GStreamer hint below would just be a second dialog for nothing. Stop
-        # here; the gst check fires cleanly on the next start once nettle3 is in.
-        return 0
-    fi
 
     command -v pacman >/dev/null 2>&1 || return 0
 
