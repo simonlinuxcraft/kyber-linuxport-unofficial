@@ -13,10 +13,12 @@
 # marker file in ~/.local/share/kyber-linuxport/.
 #
 # Also adds the bundled nettle 3 on nettle-4.0-only hosts (Arch, CachyOS,
-# SteamOS 3.9+), on any distro, see the nettle comment in build-appimage.sh.
+# SteamOS 3.9+), on any distro and regardless of KYBER_NO_CACHYOS_HINT, see
+# the nettle comment in build-appimage.sh. Only the 64-bit entries count, a
+# lib32 nettle 3 does not help the launcher.
 
 _kyber_ldc="$( { ldconfig -p || /sbin/ldconfig -p; } 2>/dev/null )"
-case "$_kyber_ldc" in *libnettle.so.8*) ;; *libnettle.so.9*)
+case "$_kyber_ldc" in *'libnettle.so.8 (libc6,x86-64'*) ;; *'libnettle.so.9 (libc6,x86-64'*)
     export LD_LIBRARY_PATH="$this_dir/usr/lib/nettle3${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
 esac
 unset _kyber_ldc

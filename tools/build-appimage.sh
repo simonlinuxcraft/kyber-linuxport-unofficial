@@ -175,7 +175,7 @@ rm -f "$APPDIR"/usr/lib/libgnutls.so.* \
 # uses the .so.8/.so.6 SONAMEs, so nothing can bind against our copy.
 mkdir -p "$APPDIR/usr/lib/nettle3"
 for _nl in libnettle.so.8 libhogweed.so.6; do
-  _src="$(ldconfig -p 2>/dev/null | awk -v n="$_nl" '$1==n && !f{print $NF; f=1}')"
+  _src="$(ldconfig -p 2>/dev/null | awk -v n="$_nl" '$1==n && /x86-64/ && !f{print $NF; f=1}' || true)"
   [ -n "$_src" ] && [ -f "$_src" ] && cp -L "$_src" "$APPDIR/usr/lib/nettle3/$_nl"
   [ -f "$APPDIR/usr/lib/nettle3/$_nl" ] || { echo "ERROR: $_nl not found on the build host" >&2; exit 1; }
 done
@@ -316,8 +316,8 @@ chmod +x "$APPDIR/apprun-hooks/kyber-backend-pref.sh"
 
 echo "==> Bundling Kyber CachyOS hint AppRun hook"
 # kyber-cachyos-hint.sh shows a one-shot zenity dialog on Arch-family
-# systems if the optional GStreamer/Vulkan packages are missing. No-op
-# everywhere else.
+# systems if the optional GStreamer/Vulkan packages are missing, and on any
+# distro puts usr/lib/nettle3 on LD_LIBRARY_PATH when the host only has nettle 4.
 cp "$TOOLS/kyber-cachyos-hint.sh" "$APPDIR/apprun-hooks/kyber-cachyos-hint.sh"
 chmod +x "$APPDIR/apprun-hooks/kyber-cachyos-hint.sh"
 
