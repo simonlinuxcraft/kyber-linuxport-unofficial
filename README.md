@@ -126,27 +126,28 @@ baseline here, not something the AppImage brings along.
 ## Dependencies
 
 The AppImage bundles most of its libraries but still needs the system
-GTK stack plus FUSE. A missing one of these is the most common reason a
-fresh install misbehaves, so pull them in up front.
+GTK stack. A missing one of these is the most common reason a fresh
+install misbehaves, so pull them in up front.
 
 Debian, Ubuntu, Mint:
 
 ```bash
-sudo apt install libgtk-3-0 libfuse2 librsvg2-2 libnotify4 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav zenity gamemode
+sudo apt install libgtk-3-0 fuse3 librsvg2-2 libnotify4 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav zenity gamemode
 ```
 
 Arch, CachyOS:
 
 ```bash
-sudo pacman -S --needed gtk3 fuse2 librsvg libnotify gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode
+sudo pacman -S --needed gtk3 fuse3 librsvg libnotify gst-plugins-base gst-plugins-bad gst-plugins-ugly gst-libav zenity gamemode
 ```
 
-Fedora: the equivalent gtk3, fuse, librsvg2, libnotify and gstreamer1
+Fedora: the equivalent gtk3, fuse3, librsvg2, libnotify and gstreamer1
 plugin packages.
 
 | Package | What it does | Needed |
 | --- | --- | --- |
-| gtk3, librsvg, libnotify, fuse2 | The launcher window itself | Required, will not start without them |
+| gtk3, librsvg, libnotify | The launcher window itself | Required, will not start without them |
+| fuse3 (or fuse2) | Mounts the AppImage | Recommended. Without it the AppImage unpacks itself on every start, which is slower |
 | gstreamer plugins (base) | Launcher sounds, party invites and credits | Optional, silent without them |
 | gstreamer plugins (bad, ugly, libav) | Plays the EA login splash video | Optional, silent without them |
 | zenity | First-start dialog that offers the desktop entry | Recommended, preinstalled on most distros |
@@ -175,7 +176,7 @@ Say yes if you want the launcher in your app menu. Most distros have
 zenity preinstalled. If the dialog doesn't show up, install it via your
 package manager.
 
-Tested on Ubuntu 24.04 with an Nvidia RTX 3060. Other distros should work
+Tested on Ubuntu 26.04 with an Nvidia RTX 3060. Other distros should work
 since the AppImage bundles its own runtime, but I haven't verified every
 one personally. The build needs glibc 2.39 or newer, so older releases
 (Ubuntu 22.04, Debian 12, SteamOS 3.6) cannot run it; use 24.04+, Fedora,
@@ -192,9 +193,8 @@ yay -S kyber-launcher-unofficial-appimage   # or: paru -S kyber-launcher-unoffic
 The AUR package is a native binary build (contributed by Yilmaz4), not the
 AppImage, and pulls in its own dependencies. The manual pacman step above is
 only needed if you run the downloaded AppImage directly. The package keeps the
-`-appimage` name for now.
-It is built separately from the AppImage release and can trail it by a version,
-so check `pkgver` if you need the newest build.
+`-appimage` name for now. It is built from the same release and updated
+together with it.
 
 ## Distro support
 
@@ -203,7 +203,7 @@ compatibility promise.
 
 | Distro | Status |
 | --- | --- |
-| Ubuntu 24.04+ | Runs. Every release is tested here |
+| Ubuntu 24.04+ | Runs. Every release is tested on 26.04 |
 | Fedora, Nobara | Runs. Community-tested, no open reports |
 | Arch, CachyOS | Runs. Since 7.0.4 without the `nettle3` package |
 | openSUSE Tumbleweed | Starts in a container test with 7.0.4, no user reports yet |
@@ -222,12 +222,14 @@ A few notes on the entries that changed:
   runtime, which speaks FUSE3, falls back to FUSE2 and extracts itself when
   neither is there. The remaining question mark is a report of GPU instability
   on AMD during play. One cause on our side, a process scan that ran forty
-  times a second, is fixed in this release; whether that settles it is unknown.
+  times a second, was fixed in 6.4.12; whether that settles it is unknown.
 - **Steam Deck** was measured on SteamOS 3.7.7: glibc 2.41, the launcher starts.
-  A Deck that has never run a Proton game has no Steam runtime to reuse, so the
-  first game start pulls one down and can take a long time.
+  SteamOS 3.9.5 (glibc 2.43, nettle 4.0) was checked with 7.0.4 against its
+  package versions in a container, not yet on a real Deck. A Deck that has
+  never run a Proton game has no Steam runtime to reuse, so the first game
+  start pulls one down and can take a long time.
 
-**Test rig:** Ubuntu 24.04, Ryzen 7 5800X, RTX 3060, 32 GB DDR4, BF2 through
+**Test rig:** Ubuntu 26.04, Ryzen 7 5800X, RTX 3060, 32 GB DDR4, BF2 through
 Steam-Proton with GE-Proton. DX12 does not work on it, DX11 gives 60 to 80 FPS
 on Ultra.
 
@@ -268,7 +270,7 @@ re-download. It is the only tested-stable path and the recommended default
 for most users.
 
 Advanced users can override the Proton build used for BF2. Settings ->
-Mod Configuration -> "Custom Proton Path (Experimental)" opens a dialog
+Mods / Proton / Wayland -> "Custom Proton Path (Experimental)" opens a dialog
 that browses for or scans the standard Steam compatibility-tools folders.
 Verified to work in testing: GE-Proton 10.x family, Proton-EM Latest,
 proton-cachyos 11.x. Newer builds with Wine 10 + DXVK 2.x can give
@@ -325,16 +327,23 @@ GDK_BACKEND=wayland ~/Applications/KyberLinuxPort-x86_64.AppImage
 
 ## Build
 
-Flutter (master channel), Rust stable, GTK 3 dev packages, patchelf,
-librsvg dev tooling.
+Build on Ubuntu 24.04, a container is fine. The release floor is glibc
+2.39, and `tools/build-appimage.sh` refuses a build that needs more. You need
+Flutter (master channel, see below), rustup (the Rust toolchains are pinned in
+the `rust-toolchain.toml` files), GTK 3 dev packages, protobuf-compiler, a
+JDK, patchelf and librsvg dev tooling.
 
 ```bash
 git clone --recurse-submodules https://github.com/simonlinuxcraft/kyber-linuxport-unofficial.git
-cd kyber-linuxport-unofficial/Kyber/Launcher
-flutter build linux --release
-cd ../..
-tools/build-appimage.sh
+cd kyber-linuxport-unofficial/Kyber
+(cd CLI && dart pub get && dart build cli)
+(cd ThirdParty/Maxima && cargo build --release -p maxima-bootstrap --target x86_64-unknown-linux-gnu)
+(cd Launcher && flutter build linux --release)
+cd .. && tools/build-appimage.sh
 ```
+
+Skip the CLI and maxima-bootstrap steps and the AppImage still builds, but it
+cannot start BF2.
 
 Output ends up in `tools/KyberLinuxPort-x86_64.AppImage`. First build
 takes a few minutes (cargo fetch, Rust compile, Flutter bundle).
