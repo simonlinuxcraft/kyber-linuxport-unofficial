@@ -50,7 +50,6 @@ fi
 echo "==> Cleaning previous AppDir"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" \
-  "$APPDIR/usr/share/icons/hicolor/256x256/apps" \
   "$APPDIR/usr/share/doc/kyber-linux"
 
 echo "==> Copying Flutter bundle into AppDir/usr/"
@@ -71,7 +70,7 @@ The exact commit / tag matching this AppImage is identified in the
 release page of that repository, alongside this binary.
 
 For the wine-helper.exe binary embedded in this AppImage, see
-$SOURCE_URL/blob/HEAD/Kyber/CLI/cli_payload/README.md
+https://github.com/simonlinuxcraft/kyber/blob/ver/beta10/CLI/cli_payload/README.md
 which carries the GPLv3 §6(b) written offer.
 EOF
 
@@ -350,116 +349,63 @@ echo "==> Bundling kyber-playmode recovery script"
 cp "$TOOLS/kyber-playmode.sh" "$APPDIR/usr/bin/kyber-playmode"
 chmod +x "$APPDIR/usr/bin/kyber-playmode"
 
-# linuxdeploy regenerates AppRun from scratch every run, so this patch is
-# applied each build (sentinel-guarded for idempotency within a single run).
+# linuxdeploy rewrites AppRun on every run, so these patches go in each build.
+# Each block is marked with a sentinel and inserted once, in front of the GTK
+# hook line unless another anchor is given (see tools/apprun-inject.py).
 APPRUN="$APPDIR/AppRun"
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_SELF_INSTALL_HOOK" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-# Insert before the linuxdeploy-plugin-gtk source line so the dialog tool
-# (zenity/kdialog) uses the system GTK, not the AppImage's bundled GTK.
-needle = 'source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
-inject = (
-    '# KYBER_SELF_INSTALL_HOOK\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-self-install.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-self-install.sh || true\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_SELF_INSTALL_HOOK' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+GTK_HOOK_LINE='source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
+apprun_inject() {  # SENTINEL [after] NEEDLE... <<'EOF'
+  local sentinel=$1 mode=before
+  shift
+  if [ "$1" = "after" ]; then mode=after; shift; fi
+  [ -f "$APPRUN" ] || return 0
+  python3 "$TOOLS/apprun-inject.py" "$APPRUN" "$sentinel" "$mode" "$@"
+}
+
+# Before the GTK hook so the dialog tool (zenity/kdialog) uses the system GTK,
+# not the AppImage's bundled GTK.
+apprun_inject KYBER_SELF_INSTALL_HOOK "$GTK_HOOK_LINE" <<'EOF'
+# KYBER_SELF_INSTALL_HOOK
+if [ -f "$this_dir"/apprun-hooks/kyber-self-install.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-self-install.sh || true
 fi
+EOF
 
 # Native Wayland toggle: source the backend-pref hook BEFORE the GTK hook so the
-# exported GDK_BACKEND survives the GTK hook's ${GDK_BACKEND:-x11}. Idempotent.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_BACKEND_PREF" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = 'source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
-inject = (
-    '# KYBER_BACKEND_PREF\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-backend-pref.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-backend-pref.sh || true\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_BACKEND_PREF' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+# exported GDK_BACKEND survives the GTK hook's ${GDK_BACKEND:-x11}.
+apprun_inject KYBER_BACKEND_PREF "$GTK_HOOK_LINE" <<'EOF'
+# KYBER_BACKEND_PREF
+if [ -f "$this_dir"/apprun-hooks/kyber-backend-pref.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-backend-pref.sh || true
 fi
+EOF
 
 # Snapshot the host XDG_DATA_DIRS before the GTK hook overwrites it, so
 # Maxima's browser-open (login.rs open_login_url) can restore the unpolluted
 # value when it spawns xdg-open for the EA sign-in. Without this the code falls
-# back to sanitising the live, hook-polluted value. Patched in before the GTK
-# source line, idempotent via sentinel.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_ORIG_XDG_DATA_DIRS" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = 'source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
-inject = (
-    '# KYBER_ORIG_XDG_DATA_DIRS - host XDG_DATA_DIRS before the GTK hook edits it\n'
-    'export KYBER_ORIG_XDG_DATA_DIRS="${XDG_DATA_DIRS:-}"\n'
-    '\n'
-)
-if needle in src and 'KYBER_ORIG_XDG_DATA_DIRS' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
-fi
+# back to sanitising the live, hook-polluted value.
+apprun_inject KYBER_ORIG_XDG_DATA_DIRS "$GTK_HOOK_LINE" <<'EOF'
+# KYBER_ORIG_XDG_DATA_DIRS - host XDG_DATA_DIRS before the GTK hook edits it
+export KYBER_ORIG_XDG_DATA_DIRS="${XDG_DATA_DIRS:-}"
+EOF
 
 # --playmode shortcut: skip everything launcher-side, drop straight
-# into kyber-playmode. Has to be patched into AppRun every build
-# because linuxdeploy rewrites AppRun from scratch. Sentinel keeps
-# the patch idempotent within one run.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_PLAYMODE_BRANCH" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_PLAYMODE_BRANCH\n'
-    'if [ "${1:-}" = "--playmode" ]; then\n'
-    '    shift\n'
-    '    exec "$this_dir"/usr/bin/kyber-playmode "$@"\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_PLAYMODE_BRANCH' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+# into kyber-playmode.
+apprun_inject KYBER_PLAYMODE_BRANCH '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_PLAYMODE_BRANCH
+if [ "${1:-}" = "--playmode" ]; then
+    shift
+    exec "$this_dir"/usr/bin/kyber-playmode "$@"
 fi
+EOF
 
 # Export __GL_MaxFramesAllowed=1 in AppRun. NVIDIA-only render-ahead cap,
 # ignored by Mesa. Already carried by the installed .desktop entry, but
 # adding it here makes the direct launch from tools/ behave the same.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_GL_MAXFRAMES" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_GL_MAXFRAMES\n'
-    'export __GL_MaxFramesAllowed="${__GL_MaxFramesAllowed:-1}"\n'
-    '\n'
-)
-if needle in src and 'KYBER_GL_MAXFRAMES' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
-fi
+apprun_inject KYBER_GL_MAXFRAMES '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_GL_MAXFRAMES
+export __GL_MaxFramesAllowed="${__GL_MaxFramesAllowed:-1}"
+EOF
 
 # Mark this as a packaged build so the launcher skips its in-app qrc://
 # registration (Maxima set_up_registry). The self-install hook already
@@ -467,22 +413,10 @@ fi
 # flag the launcher overwrites it on every start with a handler pointing at
 # the ephemeral FUSE mount, which goes stale on the next launch and breaks the
 # EA login callback. Honors an existing MAXIMA_PACKAGED for dev overrides.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_MAXIMA_PACKAGED" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_MAXIMA_PACKAGED\n'
-    'export MAXIMA_PACKAGED="${MAXIMA_PACKAGED:-1}"\n'
-    '\n'
-)
-if needle in src and 'KYBER_MAXIMA_PACKAGED' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
-fi
+apprun_inject KYBER_MAXIMA_PACKAGED '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_MAXIMA_PACKAGED
+export MAXIMA_PACKAGED="${MAXIMA_PACKAGED:-1}"
+EOF
 
 # media_kit resolves libmpv by bare name, trying libmpv.so first. On a host with
 # an unversioned libmpv.so (the libmpv-dev symlink) that pulls the system libmpv
@@ -490,163 +424,83 @@ fi
 # then crosses between the two and aborts on the first-start intro video. media_kit
 # honors LIBMPV_LIBRARY_PATH before the bare-name search, so pin it to the bundled
 # lib in the live mount. Set unconditionally; a wrong user value brings the crash back.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_LIBMPV_PATH" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_LIBMPV_PATH\n'
-    'export LIBMPV_LIBRARY_PATH="$this_dir/usr/lib/libmpv.so.2"\n'
-    '\n'
-)
-if needle in src and 'KYBER_LIBMPV_PATH' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
-fi
+apprun_inject KYBER_LIBMPV_PATH '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_LIBMPV_PATH
+export LIBMPV_LIBRARY_PATH="$this_dir/usr/lib/libmpv.so.2"
+EOF
 
 # AppImage launcher self-update endpoint (manifest JSON published as a release
 # asset). Gated to "loose" AppImage installs: AUR/repo-owned binaries (pacman
 # -Qo hit) and the extracted /opt AUR install ($APPIMAGE empty -> Dart skips)
 # get no updater. Explicit env wins (even empty), so the PKGBUILD can force off.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_UPDATE_URL" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_UPDATE_URL - only self-update "loose" AppImage installs. AUR/repo\n'
-    '# binaries are owned by pacman and update via the package; the in-app\n'
-    '# container updater must stay out of their way. Discriminator is per binary\n'
-    '# (pacman ownership), not per distro. ${VAR+x} honours an explicit env (even\n'
-    '# empty), letting the PKGBUILD force the updater off deterministically.\n'
-    'if [ -n "${KYBER_UPDATE_URL+x}" ]; then\n'
-    '    : # explicit override (incl. empty=off) - honour as-is\n'
-    'elif [ -n "${APPIMAGE:-}" ] && command -v pacman >/dev/null 2>&1 && pacman -Qo "$APPIMAGE" >/dev/null 2>&1; then\n'
-    '    : # AUR/repo-owned binary -> leave unset -> updater stays off\n'
-    'else\n'
-    '    export KYBER_UPDATE_URL="https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/releases/latest/download/latest.json"\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_UPDATE_URL' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+apprun_inject KYBER_UPDATE_URL '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_UPDATE_URL - only self-update "loose" AppImage installs. AUR/repo
+# binaries are owned by pacman and update via the package; the in-app
+# container updater must stay out of their way. Discriminator is per binary
+# (pacman ownership), not per distro. ${VAR+x} honours an explicit env (even
+# empty), letting the PKGBUILD force the updater off deterministically.
+if [ -n "${KYBER_UPDATE_URL+x}" ]; then
+    : # explicit override (incl. empty=off) - honour as-is
+elif [ -n "${APPIMAGE:-}" ] && command -v pacman >/dev/null 2>&1 && pacman -Qo "$APPIMAGE" >/dev/null 2>&1; then
+    : # AUR/repo-owned binary -> leave unset -> updater stays off
+else
+    export KYBER_UPDATE_URL="https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/releases/latest/download/latest.json"
 fi
+EOF
 
 # Quiet GTK input-method warnings (IBus / GTK modules missing) that look like
 # errors on minimal/immutable systems (Steam Deck etc.) but are harmless. Only
 # fallback-set with ${:-}, so a host with a real ibus/fcitx setup keeps it.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_GTK_IM_QUIET" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_GTK_IM_QUIET\n'
-    'export GTK_IM_MODULE="${GTK_IM_MODULE:-}"\n'
-    'export GTK_MODULES="${GTK_MODULES:-}"\n'
-    '\n'
-)
-if needle in src and 'KYBER_GTK_IM_QUIET' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
-fi
+apprun_inject KYBER_GTK_IM_QUIET '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_GTK_IM_QUIET
+export GTK_IM_MODULE="${GTK_IM_MODULE:-}"
+export GTK_MODULES="${GTK_MODULES:-}"
+EOF
 
 # CachyOS / Arch hint hook. Runs before the self-install hook so the
 # zenity dialog appears first if optional GStreamer plugins are missing.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_CACHYOS_HINT" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_CACHYOS_HINT\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh || true\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_CACHYOS_HINT' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+apprun_inject KYBER_CACHYOS_HINT '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_CACHYOS_HINT
+if [ -f "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh || true
 fi
+EOF
 
 # Steam Deck / SteamOS hint hook. Runs before the self-install hook so the
 # note appears first. No-op on non-SteamOS systems.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_STEAMDECK_HINT" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = '# KYBER_SELF_INSTALL_HOOK'
-inject = (
-    '# KYBER_STEAMDECK_HINT\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh || true\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_STEAMDECK_HINT' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+apprun_inject KYBER_STEAMDECK_HINT '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_STEAMDECK_HINT
+if [ -f "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh || true
 fi
+EOF
 
 # Vulkan pre-check hook. Runs right before the GTK plugin loads, after the
 # self-install dialog has had its turn, so we never overlap two dialogs at
 # launcher boot. Silent on systems with a real GPU.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_VULKAN_PRECHECK" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-needle = 'source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
-inject = (
-    '# KYBER_VULKAN_PRECHECK\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-vulkan-precheck.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-vulkan-precheck.sh || true\n'
-    'fi\n'
-    '\n'
-)
-if needle in src and 'KYBER_VULKAN_PRECHECK' not in src:
-    src = src.replace(needle, inject + needle, 1)
-    p.write_text(src)
-PYEOF
+apprun_inject KYBER_VULKAN_PRECHECK "$GTK_HOOK_LINE" <<'EOF'
+# KYBER_VULKAN_PRECHECK
+if [ -f "$this_dir"/apprun-hooks/kyber-vulkan-precheck.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-vulkan-precheck.sh || true
 fi
+EOF
 
-# glibc gate. Patched in right after the `this_dir=` line so it runs first,
-# before any other hook or the app binary, and can abort a too-old host with a
-# message. Falls back to just-before-GTK if linuxdeploy changes that line.
-if [ -f "$APPRUN" ] && ! grep -q "KYBER_GLIBC_GATE" "$APPRUN"; then
-  python3 - "$APPRUN" <<'PYEOF'
-import sys, pathlib
-p = pathlib.Path(sys.argv[1])
-src = p.read_text()
-gate = (
-    '# KYBER_GLIBC_GATE - abort early on glibc < 2.39 with a clear message\n'
-    'if [ -f "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh ]; then\n'
-    '    source "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh || true\n'
-    'fi\n'
-)
-if 'KYBER_GLIBC_GATE' not in src:
-    anchor = 'this_dir="$(readlink -f "$(dirname "$0")")"'
-    gtk = 'source "$this_dir"/apprun-hooks/"linuxdeploy-plugin-gtk.sh"'
-    if anchor in src:
-        src = src.replace(anchor, anchor + '\n\n' + gate, 1)
-        p.write_text(src)
-    elif gtk in src:
-        src = src.replace(gtk, gate + '\n' + gtk, 1)
-        p.write_text(src)
-PYEOF
+# glibc gate. Right after the `this_dir=` line so it runs first, before any
+# other hook or the app binary, and can abort a too-old host with a message.
+# Falls back to just-before-GTK if linuxdeploy changes that line.
+apprun_inject KYBER_GLIBC_GATE after 'this_dir="$(readlink -f "$(dirname "$0")")"' <<'EOF'
+# KYBER_GLIBC_GATE - abort early on glibc < 2.39 with a clear message
+if [ -f "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh || true
+fi
+EOF
+if ! grep -q KYBER_GLIBC_GATE "$APPRUN"; then
+  apprun_inject KYBER_GLIBC_GATE "$GTK_HOOK_LINE" <<'EOF'
+# KYBER_GLIBC_GATE - abort early on glibc < 2.39 with a clear message
+if [ -f "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-glibc-precheck.sh || true
+fi
+EOF
 fi
 
 echo "==> Restoring Flutter RUNPATH"
