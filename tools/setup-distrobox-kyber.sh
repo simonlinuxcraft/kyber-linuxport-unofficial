@@ -3,8 +3,8 @@
 # setup-distrobox-kyber.sh
 # ------------------------
 # One-shot setup for running the Kyber (Linux Port) AppImage inside a Distrobox
-# container, for hosts whose glibc is older than 2.38 (Linux Mint 21.x,
-# Ubuntu 22.04, Debian 12, SteamOS 3.6, ...). The launcher hard-gates glibc < 2.38,
+# container, for hosts whose glibc is older than 2.39 (Linux Mint 21.x,
+# Ubuntu 22.04, Debian 12, SteamOS 3.6, ...). The launcher hard-gates glibc < 2.39,
 # so it cannot run on the host directly; an Ubuntu 24.04 container (glibc 2.39)
 # clears the gate while still using the host GPU and the host's Steam-Proton
 # BF2 install.

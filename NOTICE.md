@@ -24,8 +24,6 @@ GPL-3.0-only work by simonlinuxcraft:
 | Path | Purpose | License |
 |---|---|---|
 | `tools/build-appimage.sh` | Pipelines the Flutter release bundle into an AppImage | GPL-3.0-only |
-| `tools/install-appimage.sh` | Manual desktop-integration installer (fallback for headless setups) | GPL-3.0-only |
-| `tools/uninstall-appimage.sh` | Counterpart to install-appimage.sh | GPL-3.0-only |
 | `tools/kyber-self-install.sh` | AppRun hook bundled into the AppImage; handles first-start desktop integration | GPL-3.0-only |
 | `CHANGELOG.md` | Per-release patch list | (no separate license; GPL-3.0-only as part of aggregate) |
 | `README.md`, `NOTICE.md` | This documentation | (same) |
