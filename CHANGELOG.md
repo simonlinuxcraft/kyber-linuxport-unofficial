@@ -5,6 +5,52 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
+## [7.0.5-beta10] - 2026-11-13 - Launch Errors and Cleanup
+
+### Fixed
+
+- When a game launch failed with an error the launcher had no special
+  message for, the whole window went blank except for the background, with
+  no navigation and no window buttons, until a restart. The launch dialog
+  closed twice and the second close took the page with it. It now closes
+  once and the error shows as a message.
+
+- A Proton build that was picked in the settings and later deleted or
+  replaced gets its own dialog now. It shows the missing path and opens the
+  Proton build setting. The old message said "no wine64 found", which was
+  wrong for most of these cases.
+
+- When EA rejected the saved sign-in and there was no saved session left to
+  throw away, the launcher kept trying to log in again. It shows the error
+  instead.
+
+- The Proton build list in the settings also finds builds under
+  `~/.steam/root/compatibilitytools.d`, like the automatic detection already
+  did.
+
+- With `XDG_DATA_HOME` set, the registry, EA ini and voice chat patches and
+  the umu wrapper used `~/.local/share/maxima` while the game ran in the
+  prefix under `XDG_DATA_HOME`. Everything uses the same prefix now. Without
+  `XDG_DATA_HOME` nothing changes.
+
+- Applying a new Proton build no longer freezes the window for up to three
+  seconds while the old Wine server stops.
+
+- The source link for the CLI payload in the AppImage's `source-url.txt`
+  pointed to a page that does not exist.
+
+### Changed
+
+- The Kyber fork carries the upstream 2.0.0-beta10.2 release, which only
+  touches the game module and the Windows build. The game module still comes
+  from Kyber's download, so the launcher behaves the same.
+
+- Removed code that never ran on Linux: the tarball self-update from the
+  Kyber server (the AppImage updates through GitHub, the AUR package through
+  pacman), the old EA login helpers from the kyber-bf2 tarball, and the
+  manual install and uninstall scripts in `tools/`. The self-install on
+  first start and the AppImage updater are unchanged.
+
 ## [7.0.4-beta10] - 2026-10-25 - SteamOS 3.9 and Downloads
 
 ### Fixed

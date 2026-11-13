@@ -76,16 +76,19 @@ not to upstream Kyber.
 
 ## Latest release
 
-v7.0.4-beta10 is the current build, and the in-app updater offers it.
+v7.0.5-beta10 is the current build, and the in-app updater offers it.
 
-- Starts again on SteamOS 3.9 and openSUSE Tumbleweed, which ship nettle
-  4.0. 7.0.3 cannot start there to update itself, so download 7.0.4 by hand
-  once. Arch and CachyOS no longer need the `nettle3` package.
+- A failed game launch no longer leaves a blank window. A Proton build that
+  was deleted or replaced gets a dialog that leads to the Proton setting.
+- The Proton build list also finds builds under `~/.steam/root`.
+- Starts on SteamOS 3.9 and openSUSE Tumbleweed, which ship nettle 4.0.
+  7.0.3 cannot start there to update itself, so download the current build
+  by hand once. Arch and CachyOS no longer need the `nettle3` package.
 - DOWNLOAD MODS no longer does nothing or stays greyed out when the server
   or a mod lookup fails, it shows the error instead.
 - After a failed inject the launcher really stops Battlefront II and the
   Wine processes around it.
-- Based on Kyber 2.0.0-beta10.1 with the Party System: parties and server
+- Based on Kyber 2.0.0-beta10.2 with the Party System: parties and server
   queues.
 - Joining another server while Battlefront II runs works again, without a
   restart.
