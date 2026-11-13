@@ -14,7 +14,7 @@ replaces=(kyber-launcher-inofficial-appimage)
 options=(!debug)
 install="${pkgname}.install"
 source=("$pkgname-$pkgver.tar.xz::$url/releases/download/v${_appver}/${pkgver}.tar.xz")
-sha256sums=("473787f277e01acd741bb9f9611306fff0fb6bba1be0acb7c2fd3c2fedac218e")
+sha256sums=("6df9903517a91114f69c4a69169fcd02e2209034e8b90d6e1a2d1249a9fbe576")
 
 package() {
 	cd "$srcdir/"

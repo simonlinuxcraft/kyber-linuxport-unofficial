@@ -28,10 +28,12 @@ Versioning tracks upstream Kyber, with port-specific patches noted separately.
   `~/.steam/root/compatibilitytools.d`, like the automatic detection already
   did.
 
-- With `XDG_DATA_HOME` set, the registry, EA ini and voice chat patches and
-  the umu wrapper used `~/.local/share/maxima` while the game ran in the
-  prefix under `XDG_DATA_HOME`. Everything uses the same prefix now. Without
-  `XDG_DATA_HOME` nothing changes.
+- With `XDG_DATA_HOME` set, the game did not start: the umu wrapper looked
+  for `umu-run` and the Proton build under `~/.local/share/maxima`, while
+  maxima keeps them under `XDG_DATA_HOME`, so the registry setup failed with
+  "8 critical entries failed". The registry, EA ini and voice chat patches
+  also went to the wrong prefix. All of them use the same folder now.
+  Without `XDG_DATA_HOME` nothing changes.
 
 - Applying a new Proton build no longer freezes the window for up to three
   seconds while the old Wine server stops.
