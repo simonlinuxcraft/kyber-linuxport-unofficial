@@ -21,6 +21,7 @@ pkgbase = kyber-launcher-unofficial-appimage
 	depends = glib2
 	depends = tinysparql
 	depends = glycin
+	depends = xdg-user-dirs
 	conflicts = kyber-launcher-inofficial-appimage
 	replaces = kyber-launcher-inofficial-appimage
 	options = !debug

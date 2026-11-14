@@ -12,14 +12,13 @@ pkgdesc="Unofficial Linux build of the Kyber mod launcher for Star Wars: Battlef
 arch=('x86_64')
 url="https://github.com/simonlinuxcraft/kyber-linuxport-unofficial"
 license=('GPL-3.0-only')
-# The tarball bundles its own GTK stack and media libraries. Listed here are
-# only the ones deliberately left unbundled: the crypto chain must come from
-# the host (a bundled nettle poisons the system gnutls), and the pixbuf/SVG and
-# notification paths load host modules. On a nettle 4 system AppRun adds the
-# nettle 3 copy from usr/lib/nettle3, so only libgnutls.so.30 has to come from
-# here. GStreamer plugins come from the host as well; without gst-plugins-base
-# the launcher plays no sounds.
-depends=('gtk3' 'librsvg' 'libnotify' 'gnutls' 'gst-plugins-base')
+# The media libraries are bundled; GTK with its pixbuf/SVG loaders, the
+# notification path and the crypto chain come from the host (a bundled nettle
+# poisons the system gnutls). On a nettle 4 system AppRun adds the nettle 3
+# copy from usr/lib/nettle3, so only libgnutls.so.30 has to come from here.
+# Without gst-plugins-base the launcher plays no sounds, and without
+# xdg-user-dirs it stops before the first window.
+depends=('gtk3' 'librsvg' 'libnotify' 'gnutls' 'gst-plugins-base' 'xdg-user-dirs')
 optdepends=('zenity: warning dialogs before start, e.g. no Vulkan (or kdialog)'
             'kdialog: warning dialogs before start, e.g. no Vulkan (or zenity)'
             'gst-plugins-bad: needed for the Origin login splash video in BF2'
@@ -29,7 +28,7 @@ optdepends=('zenity: warning dialogs before start, e.g. no Vulkan (or kdialog)'
             'gamemode: keeps the CPU governor on performance while BF2 runs')
 provides=('kyber-launcher')
 conflicts=('kyber-launcher-unofficial-appimage' 'kyber-launcher-inofficial-appimage')
-options=('!strip')
+options=('!strip' '!debug')
 source=("${_pkgname}-${_appver}-x86_64.tar.gz::${url}/releases/download/v${_appver}/${_pkgname}-x86_64.tar.gz")
 sha256sums=('a4a5d07840f5f460dade4a005408b7e465a40aa4cd8e5cb134169c948beee2b7')
 
