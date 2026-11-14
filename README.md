@@ -78,6 +78,11 @@ not to upstream Kyber.
 
 v7.0.5-beta10 is the current build, and the in-app updater offers it.
 
+- The start dialog shows each launch step and the elapsed time instead of
+  a bare spinner. Launch errors explain themselves in a dialog.
+- New System section under Settings > Logs & Activity to copy into bug
+  reports, download progress on the dock icon, and a short "what's new"
+  after each update.
 - A failed game launch no longer leaves a blank window. A Proton build that
   was deleted or replaced gets a dialog that leads to the Proton setting.
 - The Proton build list also finds builds under `~/.steam/root`.
@@ -153,7 +158,7 @@ plugin packages.
 | fuse3 (or fuse2) | Mounts the AppImage | Recommended. Without it the AppImage unpacks itself on every start, which is slower |
 | gstreamer plugins (base) | Launcher sounds, party invites and credits | Optional, silent without them |
 | gstreamer plugins (bad, ugly, libav) | Plays the EA login splash video | Optional, silent without them |
-| zenity | First-start dialog that offers the desktop entry | Recommended, preinstalled on most distros |
+| zenity | Warning dialogs when the system cannot run the launcher (old glibc, no Vulkan) | Recommended, preinstalled on most distros |
 | gamemode | Keeps the CPU governor on performance | Optional, smoother frames |
 
 webkit2gtk is no longer needed: the in-app webview is unused on Linux, so
@@ -174,10 +179,8 @@ chmod +x ~/Applications/KyberLinuxPort-x86_64.AppImage
 ~/Applications/KyberLinuxPort-x86_64.AppImage
 ```
 
-On first start a small zenity dialog asks if you want a desktop entry.
-Say yes if you want the launcher in your app menu. Most distros have
-zenity preinstalled. If the dialog doesn't show up, install it via your
-package manager.
+On first start the launcher asks if you want it in your app menu. Say
+yes: that also sets up the handler the EA login returns through.
 
 Tested on Ubuntu 26.04 with an Nvidia RTX 3060. Other distros should work
 since the AppImage bundles its own runtime, but I haven't verified every

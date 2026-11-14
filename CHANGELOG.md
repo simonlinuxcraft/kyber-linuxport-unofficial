@@ -5,9 +5,47 @@ All notable changes to the Kyber Linux Port are recorded in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
-## [7.0.5-beta10] - 2026-11-13 - Launch Errors and Cleanup
+## [7.0.5-beta10] - 2026-11-14 - Launch Steps and Fixes
+
+### Added
+
+- The start dialog shows what the launch is doing instead of a bare
+  spinner: installing the umu and EAC runtimes, preparing the Wine prefix
+  on the first launch, writing the registry (n/13), requesting the game
+  license, waiting for the game and for the Kyber handshake. A clock shows
+  the elapsed time, and the hint no longer promises "a few seconds" during
+  a first launch that takes a minute or two.
+
+- Errors when starting the game open a dialog with a plain explanation, a
+  button that copies the full error and, for Proton problems, a button to
+  the Proton setting. They used to be a toast that was gone after a few
+  seconds.
+
+- After an update the launcher shows once what changed, taken from this
+  changelog.
+
+- Settings > Logs & Activity has a System section: launcher version and
+  package type, distribution, desktop session, Proton build, kind of Wine
+  prefix, umu runtime and GameMode, with a button that copies all of it
+  for a bug report.
+
+- The Proton build dialog shows which build the next launch uses.
+
+- Mod and Proton downloads show their progress on the dock icon in
+  dash-to-dock, dash-to-panel and KDE Plasma.
+
+- The menu entry has an "Open Logs Folder" action on right-click.
+
+- AppStream metadata, so software centers and AppImage managers such as
+  Gear Lever show a description and links.
 
 ### Fixed
+
+- Another Wine program running next to Kyber, such as a Steam game or
+  Lutris, no longer forces the slow registry check before every launch.
+  Only a Wine server for Kyber's own prefix counts now. On a fresh prefix
+  the registry is written in one step, which cuts that part of the first
+  launch from about 40 seconds to about 6.
 
 - When a game launch failed with an error the launcher had no special
   message for, the whole window went blank except for the background, with
@@ -42,6 +80,15 @@ Versioning tracks upstream Kyber, with port-specific patches noted separately.
   pointed to a page that does not exist.
 
 ### Changed
+
+- Dialogs are as tall as their content instead of always taking the full
+  height.
+
+- The question whether to add Kyber to the applications menu, the Steam
+  Deck note about the EA login and the note about optional Arch packages
+  are launcher dialogs now. The AppImage no longer needs zenity or kdialog
+  for them. The question comes before the first EA login, because the menu
+  entry also brings the handler the login returns through.
 
 - The Kyber fork carries the upstream 2.0.0-beta10.2 release, which only
   touches the game module and the Windows build. The game module still comes
