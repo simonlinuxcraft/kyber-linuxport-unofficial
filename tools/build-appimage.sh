@@ -318,6 +318,25 @@ echo "==> Bundling Kyber backend-pref AppRun hook"
 cp "$TOOLS/kyber-backend-pref.sh" "$APPDIR/apprun-hooks/kyber-backend-pref.sh"
 chmod +x "$APPDIR/apprun-hooks/kyber-backend-pref.sh"
 
+echo "==> Bundling xdg-user-dir fallback"
+# path_provider asks xdg-user-dir for the documents folder, and the launcher
+# stops before its first window without an answer. Minimal window-manager
+# setups do not always ship xdg-user-dirs; AppRun appends this copy to PATH
+# only when the host has none.
+mkdir -p "$APPDIR/usr/lib/kyber-fallback-bin"
+cat > "$APPDIR/usr/lib/kyber-fallback-bin/xdg-user-dir" <<'EOF'
+#!/bin/sh
+# Same answer as xdg-user-dirs: the configured folder, else $HOME
+# ($HOME/Desktop for DESKTOP).
+case "$1" in ''|*[!A-Z_]*) echo "$HOME"; exit 0 ;; esac
+dirs="${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
+[ -f "$dirs" ] && . "$dirs"
+fallback=$HOME
+[ "$1" = DESKTOP ] && fallback=$HOME/Desktop
+eval "echo \"\${XDG_${1}_DIR:-\$fallback}\""
+EOF
+chmod +x "$APPDIR/usr/lib/kyber-fallback-bin/xdg-user-dir"
+
 echo "==> Bundling Kyber nettle AppRun hook"
 # kyber-nettle.sh puts usr/lib/nettle3 on LD_LIBRARY_PATH when the host only
 # has nettle 4.
@@ -451,6 +470,11 @@ apprun_inject KYBER_GTK_IM_QUIET '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
 # KYBER_GTK_IM_QUIET
 export GTK_IM_MODULE="${GTK_IM_MODULE:-}"
 export GTK_MODULES="${GTK_MODULES:-}"
+EOF
+
+apprun_inject KYBER_XDG_USER_DIR '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_XDG_USER_DIR
+command -v xdg-user-dir >/dev/null 2>&1 || export PATH="$PATH:$this_dir/usr/lib/kyber-fallback-bin"
 EOF
 
 apprun_inject KYBER_NETTLE '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
