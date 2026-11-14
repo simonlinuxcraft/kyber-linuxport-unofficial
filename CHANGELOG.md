@@ -41,6 +41,16 @@ Versioning tracks upstream Kyber, with port-specific patches noted separately.
 
 ### Fixed
 
+- The launcher stopped before its first window when xdg-user-dirs was
+  missing, as on some minimal window-manager setups, because it could not
+  find the documents folder. The AppImage and the tar.gz bring a stand-in
+  for xdg-user-dir that is only used when the system has none; the AUR and
+  bin packages depend on xdg-user-dirs.
+
+- On the Steam Deck and other screens narrower than 1400 pixels the window
+  reached past the screen edge. Its size and minimum size now stay within
+  the primary display.
+
 - Another Wine program running next to Kyber, such as a Steam game or
   Lutris, no longer forces the slow registry check before every launch.
   Only a Wine server for Kyber's own prefix counts now. On a fresh prefix
@@ -87,7 +97,7 @@ Versioning tracks upstream Kyber, with port-specific patches noted separately.
 - The question whether to add Kyber to the applications menu, the Steam
   Deck note about the EA login and the note about optional Arch packages
   are launcher dialogs now. The AppImage no longer needs zenity or kdialog
-  for them. The question comes before the first EA login, because the menu
+  for them, and the Arch note has a button that copies the pacman command. The question comes before the first EA login, because the menu
   entry also brings the handler the login returns through.
 
 - The Kyber fork carries the upstream 2.0.0-beta10.2 release, which only

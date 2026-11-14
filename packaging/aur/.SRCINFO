@@ -26,6 +26,6 @@ pkgbase = kyber-launcher-unofficial-appimage
 	replaces = kyber-launcher-inofficial-appimage
 	options = !debug
 	source = kyber-launcher-unofficial-appimage-7.0.5_beta10.tar.xz::https://github.com/simonlinuxcraft/kyber-linuxport-unofficial/releases/download/v7.0.5-beta10/7.0.5_beta10.tar.xz
-	sha256sums = d6da7292c54bcad14d6ad8630849b0c51bba71ddfd4f838623d5bba3a5005adc
+	sha256sums = be429eba0f2367d8794c8b389a25d789ce1c312339019a5c537f93444f9a9b33
 
 pkgname = kyber-launcher-unofficial-appimage
