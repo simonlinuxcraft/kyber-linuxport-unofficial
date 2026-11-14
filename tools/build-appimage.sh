@@ -88,6 +88,11 @@ Terminal=false
 Categories=Game;
 StartupWMClass=kyber-linux
 Keywords=BF2;Battlefront;Kyber;StarWars;
+Actions=open-logs;
+
+[Desktop Action open-logs]
+Name=Open Logs Folder
+Exec=sh -c "xdg-open \\"\\$HOME/.local/share/kyber/launcher\\""
 EOF
 
 echo "==> Placing Kyber Linux Port icon (rendered from SVG)"
@@ -169,7 +174,7 @@ rm -f "$APPDIR"/usr/lib/libgnutls.so.* \
 # libnettle.so.9/libhogweed.so.7 only, so the launcher dies there with
 # "libnettle.so.8: cannot open shared object file". Ship the build host's nettle
 # 3 (the version the consumers were linked against) outside the RUNPATH, in
-# usr/lib/nettle3. tools/kyber-cachyos-hint.sh puts it on LD_LIBRARY_PATH only
+# usr/lib/nettle3. tools/kyber-nettle.sh puts it on LD_LIBRARY_PATH only
 # when the host has libnettle.so.9 and no libnettle.so.8. Then no system library
 # uses the .so.8/.so.6 SONAMEs, so nothing can bind against our copy.
 mkdir -p "$APPDIR/usr/lib/nettle3"
@@ -301,9 +306,9 @@ mkdir -p "$APPDIR/usr/lib/gdk-pixbuf-2.0"
   cp "$GDK_QUERY_LOADERS" "$APPDIR/usr/lib/gdk-pixbuf-2.0/gdk-pixbuf-query-loaders"
 
 echo "==> Bundling Kyber self-install AppRun hook"
-# kyber-self-install.sh registers the desktop integration on first start
-# (and refreshes it on version updates). It runs BEFORE the GTK hook so
-# zenity/kdialog use the system GTK rather than the bundled AppImage GTK.
+# kyber-self-install.sh keeps the desktop integration of the AppImage current.
+# It runs BEFORE the GTK hook, so the host tools it calls do not pick up the
+# bundled GTK.
 cp "$TOOLS/kyber-self-install.sh" "$APPDIR/apprun-hooks/kyber-self-install.sh"
 chmod +x "$APPDIR/apprun-hooks/kyber-self-install.sh"
 
@@ -313,19 +318,11 @@ echo "==> Bundling Kyber backend-pref AppRun hook"
 cp "$TOOLS/kyber-backend-pref.sh" "$APPDIR/apprun-hooks/kyber-backend-pref.sh"
 chmod +x "$APPDIR/apprun-hooks/kyber-backend-pref.sh"
 
-echo "==> Bundling Kyber CachyOS hint AppRun hook"
-# kyber-cachyos-hint.sh shows a one-shot zenity dialog on Arch-family
-# systems if the optional GStreamer/Vulkan packages are missing, and on any
-# distro puts usr/lib/nettle3 on LD_LIBRARY_PATH when the host only has nettle 4.
-cp "$TOOLS/kyber-cachyos-hint.sh" "$APPDIR/apprun-hooks/kyber-cachyos-hint.sh"
-chmod +x "$APPDIR/apprun-hooks/kyber-cachyos-hint.sh"
-
-echo "==> Bundling Kyber Steam Deck hint AppRun hook"
-# kyber-steamdeck-hint.sh shows a one-shot note on SteamOS/Steam Deck about
-# the EA login paste flow (the browser callback does not return there). No-op
-# everywhere else.
-cp "$TOOLS/kyber-steamdeck-hint.sh" "$APPDIR/apprun-hooks/kyber-steamdeck-hint.sh"
-chmod +x "$APPDIR/apprun-hooks/kyber-steamdeck-hint.sh"
+echo "==> Bundling Kyber nettle AppRun hook"
+# kyber-nettle.sh puts usr/lib/nettle3 on LD_LIBRARY_PATH when the host only
+# has nettle 4.
+cp "$TOOLS/kyber-nettle.sh" "$APPDIR/apprun-hooks/kyber-nettle.sh"
+chmod +x "$APPDIR/apprun-hooks/kyber-nettle.sh"
 
 echo "==> Bundling Kyber Vulkan pre-check AppRun hook"
 # kyber-vulkan-precheck.sh warns when Vulkan only exposes a software
@@ -362,8 +359,7 @@ apprun_inject() {  # SENTINEL [after] NEEDLE... <<'EOF'
   python3 "$TOOLS/apprun-inject.py" "$APPRUN" "$sentinel" "$mode" "$@"
 }
 
-# Before the GTK hook so the dialog tool (zenity/kdialog) uses the system GTK,
-# not the AppImage's bundled GTK.
+# Before the GTK hook, so the host tools the hook calls use the system GTK.
 apprun_inject KYBER_SELF_INSTALL_HOOK "$GTK_HOOK_LINE" <<'EOF'
 # KYBER_SELF_INSTALL_HOOK
 if [ -f "$this_dir"/apprun-hooks/kyber-self-install.sh ]; then
@@ -457,27 +453,15 @@ export GTK_IM_MODULE="${GTK_IM_MODULE:-}"
 export GTK_MODULES="${GTK_MODULES:-}"
 EOF
 
-# CachyOS / Arch hint hook. Runs before the self-install hook so the
-# zenity dialog appears first if optional GStreamer plugins are missing.
-apprun_inject KYBER_CACHYOS_HINT '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
-# KYBER_CACHYOS_HINT
-if [ -f "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh ]; then
-    source "$this_dir"/apprun-hooks/kyber-cachyos-hint.sh || true
+apprun_inject KYBER_NETTLE '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
+# KYBER_NETTLE
+if [ -f "$this_dir"/apprun-hooks/kyber-nettle.sh ]; then
+    source "$this_dir"/apprun-hooks/kyber-nettle.sh || true
 fi
 EOF
 
-# Steam Deck / SteamOS hint hook. Runs before the self-install hook so the
-# note appears first. No-op on non-SteamOS systems.
-apprun_inject KYBER_STEAMDECK_HINT '# KYBER_SELF_INSTALL_HOOK' <<'EOF'
-# KYBER_STEAMDECK_HINT
-if [ -f "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh ]; then
-    source "$this_dir"/apprun-hooks/kyber-steamdeck-hint.sh || true
-fi
-EOF
-
-# Vulkan pre-check hook. Runs right before the GTK plugin loads, after the
-# self-install dialog has had its turn, so we never overlap two dialogs at
-# launcher boot. Silent on systems with a real GPU.
+# Vulkan pre-check hook. Runs right before the GTK plugin loads. Silent on
+# systems with a real GPU.
 apprun_inject KYBER_VULKAN_PRECHECK "$GTK_HOOK_LINE" <<'EOF'
 # KYBER_VULKAN_PRECHECK
 if [ -f "$this_dir"/apprun-hooks/kyber-vulkan-precheck.sh ]; then
@@ -590,6 +574,39 @@ else
     echo "    Built AppImage will NOT start on Bazzite / Silverblue / Fedora atomic."
     echo "    Download via: gh release download continuous --repo AppImage/type2-runtime --pattern 'runtime-x86_64' --output tools/type2-runtime-x86_64"
 fi
+# AppStream data for software centers and AppImage managers. The release
+# line follows the launcher version.
+PORT_VERSION="$(grep -oP "kLinuxPortVersion\s*=\s*'\K[^']+" \
+  "$REPO_ROOT/Kyber/Launcher/lib/features/settings/screens/settings_list.dart")"
+METAINFO="$APPDIR/usr/share/metainfo/io.github.simonlinuxcraft.kyber_linuxport.metainfo.xml"
+mkdir -p "${METAINFO%/*}"
+cat > "$METAINFO" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.simonlinuxcraft.kyber_linuxport</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <name>Kyber (Linux Port)</name>
+  <summary>Unofficial Linux port of the Kyber mod launcher</summary>
+  <description>
+    <p>Kyber is the mod launcher and server browser for Star Wars Battlefront II (2017). This port runs it on Linux and starts the game through Proton.</p>
+    <p>It is not made or endorsed by the Kyber team.</p>
+  </description>
+  <developer id="io.github.simonlinuxcraft">
+    <name>simonlinuxcraft</name>
+  </developer>
+  <launchable type="desktop-id">kyber-linux.desktop</launchable>
+  <url type="homepage">$SOURCE_URL</url>
+  <url type="bugtracker">$SOURCE_URL/issues</url>
+  <categories>
+    <category>Game</category>
+  </categories>
+  <releases>
+    <release version="$PORT_VERSION" date="$(date -u +%F)"/>
+  </releases>
+</component>
+EOF
+
 ARCH=x86_64 ./appimagetool-x86_64.AppImage --no-appstream "${RUNTIME_ARGS[@]}" "$APPDIR" "$OUTPUT"
 
 # Update manifest for the AppImage self-updater (KYBER_UPDATE_URL). Upload this
@@ -597,8 +614,6 @@ ARCH=x86_64 ./appimagetool-x86_64.AppImage --no-appstream "${RUNTIME_ARGS[@]}" "
 # version (Linux-port scheme from kLinuxPortVersion), download_url (stable
 # releases/latest redirect), and sha256 to verify the download.
 echo "==> Writing update manifest (latest.json)"
-PORT_VERSION="$(grep -oP "kLinuxPortVersion\s*=\s*'\K[^']+" \
-  "$REPO_ROOT/Kyber/Launcher/lib/features/settings/screens/settings_list.dart")"
 OUTPUT_SHA="$(sha256sum "$OUTPUT" | cut -d' ' -f1)"
 cat > "$TOOLS/latest.json" <<EOF
 {
@@ -614,7 +629,8 @@ echo "==> Writing AUR archive"
 AUR_TARXZ="$TOOLS/${PORT_VERSION//-/_}.tar.xz"
 tar -C "$APPDIR" --owner=0 --group=0 --numeric-owner --exclude=.sentry-native \
   --transform 's,^usr/bin,opt/kyber,' -I 'xz -9e -T0' -cf "$AUR_TARXZ" \
-  usr/bin usr/share/applications usr/share/icons usr/share/doc/kyber-linux
+  usr/bin usr/share/applications usr/share/icons usr/share/metainfo \
+  usr/share/doc/kyber-linux
 
 echo
 echo "==> Done"

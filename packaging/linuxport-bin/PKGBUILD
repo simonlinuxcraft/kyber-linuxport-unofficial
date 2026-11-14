@@ -20,8 +20,8 @@ license=('GPL-3.0-only')
 # here. GStreamer plugins come from the host as well; without gst-plugins-base
 # the launcher plays no sounds.
 depends=('gtk3' 'librsvg' 'libnotify' 'gnutls' 'gst-plugins-base')
-optdepends=('zenity: startup hint dialogs (alternative to kdialog)'
-            'kdialog: startup hint dialogs (alternative to zenity)'
+optdepends=('zenity: warning dialogs before start, e.g. no Vulkan (or kdialog)'
+            'kdialog: warning dialogs before start, e.g. no Vulkan (or zenity)'
             'gst-plugins-bad: needed for the Origin login splash video in BF2'
             'gst-plugins-ugly: needed for the Origin login splash video in BF2'
             'gst-libav: needed for the Origin login splash video in BF2'
@@ -49,6 +49,11 @@ package() {
     done
     install -Dm644 "${srcdir}/${_pkgname}/usr/share/icons/hicolor/scalable/apps/kyber-linux.svg" \
         "${pkgdir}/usr/share/icons/hicolor/scalable/apps/kyber-linux.svg"
+    # AppStream data for software centers, pointed at this package's menu entry.
+    _mi=io.github.simonlinuxcraft.kyber_linuxport.metainfo.xml
+    install -dm755 "${pkgdir}/usr/share/metainfo"
+    sed "s/kyber-linux\.desktop/${pkgname}.desktop/" \
+        "${srcdir}/${_pkgname}/usr/share/metainfo/${_mi}" > "${pkgdir}/usr/share/metainfo/${_mi}"
 
     # Wrapper. KYBER_NO_AUTO_INSTALL=1 no-ops the self-install hook and the
     # launcher's own nxm/kl registration, so the packaged handlers below stay the
@@ -80,6 +85,13 @@ Terminal=false
 Categories=Game;
 StartupWMClass=kyber-linux
 Keywords=BF2;Battlefront;Kyber;StarWars;
+EOF
+    cat >> "${pkgdir}/usr/share/applications/${pkgname}.desktop" <<'EOF'
+Actions=open-logs;
+
+[Desktop Action open-logs]
+Name=Open Logs Folder
+Exec=sh -c "xdg-open \\"\\$HOME/.local/share/kyber/launcher\\""
 EOF
 
     # qrc:// OAuth redirect handler (EA login). Basename matches the one the

@@ -2,26 +2,15 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 simonlinuxcraft
 #
-# kyber-self-install.sh - AppRun hook that registers desktop integration on
-# first start and refreshes it when the AppImage version changes.
+# kyber-self-install.sh - desktop integration for the AppImage: a copy in
+# ~/Applications, the menu entry, icons and the qrc:// handler for the EA login.
 #
-# Sourced by AppRun BEFORE linuxdeploy-plugin-gtk.sh, so dialog tools
-# (zenity/kdialog) load against the system GTK and not the bundled one.
+# The launcher asks once and runs this file with KYBER_SELF_INSTALL=yes or no.
+# AppRun sources it on every start without that variable; then it only
+# refreshes an existing install when the AppImage changed. Nothing happens
+# without $APPIMAGE or with $KYBER_NO_AUTO_INSTALL (packages, CI).
 #
-# This hook is a no-op when:
-#   - $APPIMAGE is unset (e.g. running --appimage-extract-and-run)
-#   - $KYBER_NO_AUTO_INSTALL is set (CI / packaging contexts)
-#   - the marker file already matches the current AppImage's size+mtime
-#
-# Behaviour matrix:
-#   first start, no marker        → ask user (zenity), install on confirm
-#   marker present, ID matches    → no-op (fast path)
-#   marker present, ID differs    → silent re-install (force update)
-#   user declines first dialog    → write "declined" marker, don't ask again
-#                                    until version changes
-
-# Defensive: this hook is sourced under `set -e`. Any unexpected error must
-# not break the launcher. Wrap everything in a function and trap.
+# Sourced under `set -e`, so every error has to stay inside the function.
 _kyber_self_install_main() {
     [ -z "${APPIMAGE:-}" ] && return 0
     [ -n "${KYBER_NO_AUTO_INSTALL:-}" ] && return 0
@@ -35,49 +24,16 @@ _kyber_self_install_main() {
     local marker="$state_dir/.installed-version"
     local declined_marker="$state_dir/.declined-version"
 
-    # Fast path: already installed for this exact AppImage.
-    if [ -f "$marker" ] && [ "$(cat "$marker" 2>/dev/null)" = "$current_id" ]; then
+    if [ -f "$marker" ]; then
+        [ "$(cat "$marker" 2>/dev/null)" = "$current_id" ] && return 0
+        _kyber_self_install_run "$current_id" 1
         return 0
     fi
 
-    # User previously declined for this exact AppImage - don't pester.
-    if [ -f "$declined_marker" ] && [ "$(cat "$declined_marker" 2>/dev/null)" = "$current_id" ]; then
-        return 0
-    fi
-
-    local is_update=0
-    [ -f "$marker" ] && is_update=1
-
-    # Confirm dialog - only on first install, not on version updates
-    # (updates are silent, the user already opted in once).
-    if [ "$is_update" = 0 ]; then
-        local prompt_title="Kyber (Linux Port)"
-        local prompt_text="Register Kyber as an application?\n\nAdds Kyber to the application menu, installs the icon, and registers the qrc:// and nxm:// URL handlers for EA login and Nexus Mods.\n\nThe AppImage will be copied to ~/Applications/.\n\nCan be uninstalled at any time."
-        local user_choice=1
-
-        # Force English locale for the dialog so Yes/No buttons match the
-        # English prompt text on non-English systems (German testers were
-        # seeing "Ja/Nein" while the body was already English-only).
-        if command -v zenity >/dev/null 2>&1; then
-            LC_ALL=C.UTF-8 LANGUAGE=en zenity --question --no-wrap --title="$prompt_title" --text="$prompt_text" 2>/dev/null && user_choice=0
-        elif command -v kdialog >/dev/null 2>&1; then
-            LC_ALL=C.UTF-8 LANGUAGE=en kdialog --title "$prompt_title" --yesno "$(printf '%b' "$prompt_text")" 2>/dev/null && user_choice=0
-        else
-            # Headless / minimal systems without zenity or kdialog: auto-install
-            # with an stderr notice. Mint/GNOME/KDE installs practically always
-            # ship one of the two.
-            echo "kyber-self-install: no zenity/kdialog found, installing automatically" >&2
-            user_choice=0
-        fi
-
-        if [ "$user_choice" != 0 ]; then
-            mkdir -p "$state_dir"
-            echo "$current_id" > "$declined_marker"
-            return 0
-        fi
-    fi
-
-    _kyber_self_install_run "$current_id" "$is_update" || return 0
+    case "${KYBER_SELF_INSTALL:-}" in
+        yes) _kyber_self_install_run "$current_id" 0 ;;
+        no) mkdir -p "$state_dir" && echo "$current_id" > "$declined_marker" ;;
+    esac
 }
 
 _kyber_self_install_run() {
@@ -125,11 +81,9 @@ _kyber_self_install_run() {
        && [ "$(cat "$extract_marker" 2>/dev/null)" = "$dst_id" ]; then
         : # already up to date
     else
-        # The extract is slow enough that without a heads-up the launcher
-        # looks frozen for a few seconds.
-        notify-send -i system-software-update \
-            "Kyber (Linux Port)" \
-            "Applying update, one moment..." 2>/dev/null || true
+        # The extract takes a few seconds before the launcher shows up.
+        [ "$is_update" = 1 ] && notify-send -i system-software-update \
+            "Kyber (Linux Port)" "Applying update, one moment..." 2>/dev/null
 
         rm -rf "$extract_dir"
         (
@@ -138,9 +92,8 @@ _kyber_self_install_run() {
         mv "$apps_dir/squashfs-root" "$extract_dir" || return 1
         [ -n "$dst_id" ] && echo "$dst_id" > "$extract_marker"
 
-        notify-send -i emblem-default \
-            "Kyber (Linux Port)" \
-            "Update applied" 2>/dev/null || true
+        [ "$is_update" = 1 ] && notify-send -i emblem-default \
+            "Kyber (Linux Port)" "Update applied" 2>/dev/null
     fi
 
     # 3. Install icons from the extracted AppDir.
@@ -191,6 +144,13 @@ Categories=Game;
 StartupWMClass=kyber-linux
 Keywords=BF2;Battlefront;Kyber;StarWars;
 EOF
+    cat >> "$desktop_dir/kyber-linuxport.desktop" <<'EOF'
+Actions=open-logs;
+
+[Desktop Action open-logs]
+Name=Open Logs Folder
+Exec=sh -c "xdg-open \\"\\$HOME/.local/share/kyber/launcher\\""
+EOF
 
     cat > "$desktop_dir/kyber-linuxport-qrc.desktop" <<EOF
 [Desktop Entry]
@@ -215,15 +175,6 @@ EOF
     # 7. Persist marker, drop any stale "declined" marker.
     echo "$current_id" > "$marker"
     rm -f "$declined_marker"
-
-    # 8. First install gets a passive notification. Updates stay silent
-    # here - the user already saw "Applying update / Update applied"
-    # earlier in this run.
-    if [ "$is_update" = 0 ] && command -v notify-send >/dev/null 2>&1; then
-        notify-send --icon="$icon_abs" \
-            "Kyber (Linux Port)" \
-            "Added to your applications." 2>/dev/null || true
-    fi
 
     return 0
 }
