@@ -380,7 +380,7 @@ shipped in the AppImage.
 
 ## Contributing
 
-Small one-person project. If you hit a Linux-specific bug, open an issue
+Small one-person project supported by AI as part of a learning process. If you hit a Linux-specific bug, open an issue
 here. Don't report Linux-specific bugs to the upstream Kyber team, they
 didn't write this part. If you're not sure whether something is
 Linux-specific, file it here anyway and I'll redirect if it turns out to
